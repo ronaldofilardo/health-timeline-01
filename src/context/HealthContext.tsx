@@ -1,6 +1,8 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Event, Professional, Specialty, Location, Holiday, EventType, FileType, EventStatus } from '@/types';
 import { format, addHours, parseISO, isToday, isPast, isFuture } from 'date-fns';
+import { parseDate, parseTime } from '@/utils/dateUtils';
 
 interface HealthContextType {
   events: Event[];
@@ -93,22 +95,18 @@ export function HealthProvider({ children }: { children: ReactNode }) {
       eventEnd.setHours(endTimeParts[0], endTimeParts[1], 0);
     } else {
       // For prescriptions without end time
-      eventEnd = null;
+      eventEnd = addHours(eventStart, 1); // Default to 1 hour duration
     }
     
     const now = new Date();
 
     // Check if event is ongoing
-    if (eventEnd && now >= eventStart && now <= eventEnd) {
+    if (now >= eventStart && now <= eventEnd) {
       return 'ongoing';
     }
     
     // Check if event is in the past
-    if (eventEnd && now > eventEnd) {
-      return 'past';
-    }
-    
-    if (!eventEnd && now > addHours(eventStart, 1)) {
+    if (now > eventEnd) {
       return 'past';
     }
     
@@ -121,21 +119,52 @@ export function HealthProvider({ children }: { children: ReactNode }) {
     return 'future';
   };
 
+  // Calculate confirmation deadline (12 hours after start time)
+  const calculateConfirmationDeadline = (eventDate: string, startTime: string): string => {
+    const dateObj = parseDate(eventDate);
+    if (!dateObj) return '';
+    
+    const startTimeObj = parseTime(startTime, dateObj);
+    if (!startTimeObj) return '';
+    
+    const deadline = addHours(startTimeObj, 12);
+    return deadline.toISOString();
+  };
+
   // Add a new event
   const addEvent = (eventData: Omit<Event, 'id' | 'status'>) => {
+    // Calculate confirmation deadline for Sessões and Prescrição
+    const confirmationDeadline = (eventData.type === 'Sessões' || eventData.type === 'Prescrição') 
+      ? calculateConfirmationDeadline(eventData.eventDate, eventData.startTime)
+      : undefined;
+    
     const newEvent: Event = {
       ...eventData,
       id: events.length > 0 ? Math.max(...events.map(e => e.id)) + 1 : 1,
-      status: getEventStatus({ ...eventData, id: 0, status: 'future' } as Event)
+      status: getEventStatus({ ...eventData, id: 0, status: 'future' } as Event),
+      confirmationDeadline,
+      files: eventData.files || [],
+      isDeleted: false
     };
+    
     setEvents([...events, newEvent]);
   };
 
   // Update an existing event
   const updateEvent = (updatedEvent: Event) => {
+    // Update confirmation deadline for Sessões and Prescrição
+    let eventToUpdate = { ...updatedEvent };
+    
+    if (eventToUpdate.type === 'Sessões' || eventToUpdate.type === 'Prescrição') {
+      eventToUpdate.confirmationDeadline = calculateConfirmationDeadline(
+        eventToUpdate.eventDate,
+        eventToUpdate.startTime
+      );
+    }
+    
     setEvents(events.map(event => 
-      event.id === updatedEvent.id ? 
-        { ...updatedEvent, status: getEventStatus(updatedEvent) } : 
+      event.id === eventToUpdate.id ? 
+        { ...eventToUpdate, status: getEventStatus(eventToUpdate) } : 
         event
     ));
   };

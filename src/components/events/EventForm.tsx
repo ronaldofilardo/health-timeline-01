@@ -33,7 +33,7 @@ export default function EventForm() {
   const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false);
   const [isProfessionalModalOpen, setIsProfessionalModalOpen] = useState(false);
   const [formState, setFormState] = useState<Partial<Event>>({
-    type: 'Consulta',
+    type: 'Consulta' as EventType,
     eventDate: new Date().toLocaleDateString('pt-BR'),
     startTime: '',
     endTime: '',
@@ -184,13 +184,16 @@ export default function EventForm() {
 
   const handleSelectChange = (name: string, value: string) => {
     if (name === 'type') {
+      // Ensure type is cast to EventType
+      const eventType = value as EventType;
+      
       // Reset type-specific fields
       setFormState(prev => ({ 
         ...prev, 
-        [name]: value,
-        isFirstConsultation: value === 'Consulta' ? prev.isFirstConsultation : false,
-        preparation: value === 'Exame' ? prev.preparation : '',
-        endTime: value === 'Prescrição' ? '' : prev.endTime
+        type: eventType,
+        isFirstConsultation: eventType === 'Consulta' ? prev.isFirstConsultation : false,
+        preparation: eventType === 'Exame' ? prev.preparation : '',
+        endTime: eventType === 'Prescrição' ? '' : prev.endTime
       }));
     } else if (name === 'professionalId') {
       const selectedProfessional = professionals.find(p => p.id === parseInt(value, 10));

@@ -178,18 +178,6 @@ export const checkEventOverlaps = (
   
   // Special case for prescriptions (just log overlaps, don't prevent)
   if (newEvent.type === 'Prescrição') {
-    const overlappingEvents = eventsOnSameDay.filter(event => {
-      const eventStart = parseTime(event.startTime, date);
-      const eventEnd = event.endTime ? parseTime(event.endTime, date) : null;
-      
-      if (!eventStart) return false;
-      
-      // If no end time, assume 1 hour duration
-      const effectiveEventEnd = eventEnd || new Date(eventStart.getTime() + 60 * 60 * 1000);
-      
-      return (startTime < effectiveEventEnd && endTime! > eventStart);
-    });
-    
     return { hasOverlap: false };
   }
   
@@ -218,7 +206,7 @@ export const checkEventOverlaps = (
     };
   }
   
-  // Check for interval constraints (different locations need 1 hour in between)
+  // Check for interval constraints between different locations
   const intervalViolations = eventsOnSameDay.filter(event => {
     if (event.type === 'Prescrição') return false; // Prescriptions don't cause interval violations
     
@@ -230,24 +218,34 @@ export const checkEventOverlaps = (
     // Check if locations are different
     const differentLocation = newEvent.locationName !== event.locationName;
     
-    // Need 1 hour before and after events at different locations
     if (differentLocation) {
+      // Calculate buffer times
       const oneHourBeforeEventStart = new Date(eventStart);
       oneHourBeforeEventStart.setHours(oneHourBeforeEventStart.getHours() - 1);
       
       const oneHourAfterEventEnd = new Date(eventEnd);
       oneHourAfterEventEnd.setHours(oneHourAfterEventEnd.getHours() + 1);
       
-      // Check if new event starts within 1 hour before another event
-      const startsTooClose = startTime >= oneHourBeforeEventStart && startTime <= eventStart;
+      // New event starts during the 1-hour period before another event
+      const newEventStartsInBuffer = startTime >= oneHourBeforeEventStart && startTime <= eventStart;
       
-      // Check if new event ends within 1 hour after another event
-      const endsTooClose = endTime! >= eventEnd && endTime! <= oneHourAfterEventEnd;
+      // New event ends during the 1-hour period after another event
+      const newEventEndsInBuffer = endTime! >= eventEnd && endTime! <= oneHourAfterEventEnd;
       
-      // Check if new event completely contains another event's buffer time
-      const containsEvent = startTime < oneHourBeforeEventStart && endTime! > oneHourAfterEventEnd;
+      // New event spans over another event's buffer time
+      const newEventSpansBuffer = startTime <= oneHourBeforeEventStart && endTime! >= eventStart;
       
-      return startsTooClose || endsTooClose || containsEvent;
+      // New event start time falls within the existing event plus its buffer
+      const startsDuringEventOrBuffer = startTime >= oneHourBeforeEventStart && startTime <= oneHourAfterEventEnd;
+      
+      // New event end time falls within the existing event plus its buffer
+      const endsDuringEventOrBuffer = endTime! >= oneHourBeforeEventStart && endTime! <= oneHourAfterEventEnd;
+      
+      // New event completely encloses the existing event and its buffers
+      const enclosesEventAndBuffer = startTime <= oneHourBeforeEventStart && endTime! >= oneHourAfterEventEnd;
+      
+      return newEventStartsInBuffer || newEventEndsInBuffer || newEventSpansBuffer || 
+             startsDuringEventOrBuffer || endsDuringEventOrBuffer || enclosesEventAndBuffer;
     }
     
     return false;

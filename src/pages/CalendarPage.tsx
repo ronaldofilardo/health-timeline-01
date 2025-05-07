@@ -1,44 +1,111 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AppLayout } from '@/components/layout/AppLayout';
-import CalendarFilter from '@/components/calendar/CalendarFilter';
+import { format, parse, startOfWeek, addDays, isEqual, parseISO } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { Calendar as ReactCalendar } from 'react-day-picker';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, FileText } from 'lucide-react';
-import { Event } from '@/types';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { formatDateHeader } from '@/utils/dateUtils';
+import { AppLayout } from '@/components/layout/AppLayout';
+import { Calendar } from '@/components/ui/calendar';
+import { ArrowLeft } from 'lucide-react';
 import { useHealth } from '@/context/HealthContext';
+import CalendarFilter from '@/components/calendar/CalendarFilter';
+import { Event } from '@/types';
 
 export default function CalendarPage() {
   const navigate = useNavigate();
-  const { holidays } = useHealth();
+  const { events } = useHealth();
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
+  const [filterType, setFilterType] = useState<'day' | 'week' | 'month'>('day');
   
-  const handleEventsFiltered = (events: Event[]) => {
-    setFilteredEvents(events);
-  };
+  // Get all dates that have events (for highlighting in the calendar)
+  const eventDates = events
+    .filter(event => !event.isDeleted)
+    .map(event => {
+      const [day, month, year] = event.eventDate.split('/').map(Number);
+      return new Date(year, month - 1, day);
+    });
   
-  const handleExportPDF = () => {
-    // In a real application, this would generate a PDF
-    alert('Em uma aplicação real, isso geraria um PDF com os eventos filtrados.');
-  };
-  
-  // Group events by date
-  const eventsByDate = filteredEvents.reduce<Record<string, Event[]>>((acc, event) => {
-    if (!acc[event.eventDate]) {
-      acc[event.eventDate] = [];
+  // Filter events based on selected date and filter type
+  const handleFilterEvents = (date: Date | undefined, type: 'day' | 'week' | 'month') => {
+    if (!date) {
+      setFilteredEvents([]);
+      return;
     }
-    acc[event.eventDate].push(event);
-    return acc;
-  }, {});
+    
+    const filtered = events.filter(event => {
+      if (event.isDeleted) return false;
+      
+      const [day, month, year] = event.eventDate.split('/').map(Number);
+      const eventDate = new Date(year, month - 1, day);
+      
+      if (type === 'day') {
+        // Filter for exact day
+        return isEqual(
+          new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate()),
+          new Date(date.getFullYear(), date.getMonth(), date.getDate())
+        );
+      } else if (type === 'week') {
+        // Filter for the week
+        const weekStart = startOfWeek(date, { locale: ptBR });
+        const weekDates = Array.from({ length: 7 }).map((_, i) => addDays(weekStart, i));
+        
+        return weekDates.some(weekDate => 
+          isEqual(
+            new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate()),
+            new Date(weekDate.getFullYear(), weekDate.getMonth(), weekDate.getDate())
+          )
+        );
+      } else {
+        // Filter for the month
+        return (
+          eventDate.getMonth() === date.getMonth() &&
+          eventDate.getFullYear() === date.getFullYear()
+        );
+      }
+    });
+    
+    // Sort by date and time
+    setFilteredEvents(filtered.sort((a, b) => {
+      // Compare dates
+      const [aDay, aMonth, aYear] = a.eventDate.split('/').map(Number);
+      const [bDay, bMonth, bYear] = b.eventDate.split('/').map(Number);
+      
+      const dateA = new Date(aYear, aMonth - 1, aDay);
+      const dateB = new Date(bYear, bMonth - 1, bDay);
+      
+      if (dateA.getTime() !== dateB.getTime()) {
+        return dateA.getTime() - dateB.getTime();
+      }
+      
+      // If same date, compare by start time
+      return a.startTime.localeCompare(b.startTime);
+    }));
+  };
   
-  // Get dates sorted in ascending order
-  const sortedDates = Object.keys(eventsByDate).sort((a, b) => {
-    const [dayA, monthA, yearA] = a.split('/').map(Number);
-    const [dayB, monthB, yearB] = b.split('/').map(Number);
-    return new Date(yearA, monthA - 1, dayA).getTime() - new Date(yearB, monthB - 1, dayB).getTime();
-  });
+  // Handle date selection in calendar
+  const handleSelect = (date: Date | undefined) => {
+    setSelectedDate(date);
+    handleFilterEvents(date, filterType);
+  };
+  
+  // Handle filter type change
+  const handleFilterTypeChange = (type: 'day' | 'week' | 'month') => {
+    setFilterType(type);
+    handleFilterEvents(selectedDate, type);
+  };
+  
+  // Handle PDF export
+  const handleExportPDF = () => {
+    if (filteredEvents.length === 0) {
+      alert('Não há eventos para exportar.');
+      return;
+    }
+    
+    // This is a placeholder for PDF generation functionality
+    alert('Exportação de PDF será implementada em uma versão futura.');
+  };
   
   return (
     <AppLayout title="Calendário">
@@ -53,78 +120,72 @@ export default function CalendarPage() {
         </Button>
       </div>
       
-      <div className="space-y-6">
-        <div className="bg-white p-4 rounded-lg shadow-sm">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
-            <CalendarFilter onEventsFiltered={handleEventsFiltered} />
+      <div className="flex flex-col lg:flex-row gap-6">
+        <div className="w-full lg:w-1/2">
+          <div className="bg-white p-4 rounded-lg shadow">
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={handleSelect}
+              locale={ptBR}
+              className="rounded-md border w-full"
+              modifiers={{
+                hasEvent: eventDates
+              }}
+              modifiersStyles={{
+                hasEvent: { 
+                  fontWeight: 'bold',
+                  backgroundColor: 'rgba(0, 128, 0, 0.1)'
+                }
+              }}
+            />
             
-            <Button 
-              onClick={handleExportPDF}
-              disabled={filteredEvents.length === 0}
-              className="self-end md:self-center"
-            >
-              <FileText className="h-4 w-4 mr-2" />
-              Exportar PDF
-            </Button>
+            <div className="mt-4 flex space-x-2 justify-center">
+              <Button 
+                variant={filterType === 'day' ? 'default' : 'outline'}
+                onClick={() => handleFilterTypeChange('day')}
+                className="flex-1"
+              >
+                Dia
+              </Button>
+              <Button 
+                variant={filterType === 'week' ? 'default' : 'outline'}
+                onClick={() => handleFilterTypeChange('week')}
+                className="flex-1"
+              >
+                Semana
+              </Button>
+              <Button 
+                variant={filterType === 'month' ? 'default' : 'outline'}
+                onClick={() => handleFilterTypeChange('month')}
+                className="flex-1"
+              >
+                Mês
+              </Button>
+            </div>
           </div>
         </div>
         
-        {filteredEvents.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-lg shadow-sm">
-            <p className="text-gray-500">Não há eventos no período selecionado.</p>
+        <div className="w-full lg:w-1/2">
+          <div className="bg-white p-4 rounded-lg shadow">
+            <div className="flex justify-between mb-4">
+              <h2 className="text-xl font-medium">
+                Eventos
+                {selectedDate && ` - ${format(selectedDate, 'MMMM yyyy', { locale: ptBR })}`}
+              </h2>
+              
+              <Button
+                variant="outline"
+                onClick={handleExportPDF}
+                disabled={filteredEvents.length === 0}
+              >
+                Exportar PDF
+              </Button>
+            </div>
+            
+            <CalendarFilter events={filteredEvents} />
           </div>
-        ) : (
-          <div className="space-y-6">
-            {sortedDates.map(date => (
-              <Card key={date}>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">
-                    {formatDateHeader(date, holidays)}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {eventsByDate[date]
-                      .sort((a, b) => a.startTime.localeCompare(b.startTime))
-                      .map(event => (
-                        <div 
-                          key={event.id} 
-                          className="p-3 border rounded-md hover:bg-gray-50 transition-colors"
-                        >
-                          <div className="flex flex-col md:flex-row md:items-center justify-between">
-                            <div>
-                              <h3 className="font-medium">
-                                {event.type} - {event.professionalName}
-                              </h3>
-                              <p className="text-sm text-gray-600">
-                                {event.type === 'Prescrição' ? 
-                                  event.startTime : 
-                                  `${event.startTime} - ${event.endTime}`
-                                }
-                              </p>
-                              {event.location && (
-                                <p className="text-sm text-gray-500">
-                                  {event.locationName}
-                                </p>
-                              )}
-                            </div>
-                            
-                            {event.observation && (
-                              <div className="md:ml-4 mt-2 md:mt-0 text-sm bg-gray-50 p-2 rounded">
-                                <p className="font-medium text-xs text-gray-500">Observação:</p>
-                                <p className="text-gray-600">{event.observation}</p>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ))
-                    }
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+        </div>
       </div>
     </AppLayout>
   );

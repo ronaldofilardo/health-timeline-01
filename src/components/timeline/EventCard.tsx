@@ -91,13 +91,22 @@ export default function EventCard({ event, position, onClick }: EventCardProps) 
 
   // Check if event can be confirmed (sessions and prescriptions only, within time window)
   const canConfirm = () => {
+    // Already confirmed events can't be confirmed again
     if (event.isConfirmed) return false;
+    
+    // Only sessions and prescriptions can be confirmed
     if (event.type !== 'Sessões' && event.type !== 'Prescrição') return false;
+    
+    // Need confirmation deadline to be set
     if (!event.confirmationDeadline) return false;
     
     // Can confirm if now is between start time and confirmation deadline
     const now = new Date();
     const deadline = new Date(event.confirmationDeadline);
+    
+    // Must be past or ongoing event to be confirmable
+    if (event.status !== 'past' && event.status !== 'ongoing') return false;
+    
     return now <= deadline;
   };
 
