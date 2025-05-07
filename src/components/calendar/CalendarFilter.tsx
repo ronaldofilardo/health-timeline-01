@@ -1,11 +1,13 @@
+
 import React from 'react';
 import { Event } from '@/types';
 
 export interface CalendarFilterProps {
   events: Event[];
+  onFilterChange?: (filteredEvents: Event[]) => void;
 }
 
-export const CalendarFilter: React.FC<CalendarFilterProps> = ({ events }) => {
+export const CalendarFilter: React.FC<CalendarFilterProps> = ({ events, onFilterChange }) => {
   return (
     <div>
       {/* Add your filter UI here */}

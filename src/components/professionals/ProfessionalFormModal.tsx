@@ -125,7 +125,6 @@ export default function ProfessionalFormModal({
     let specialtyName = formData.specialtyName;
     
     if (formData.newSpecialty) {
-      // Corrigindo o erro de TypeScript: não tratar o retorno como booleano
       const newSpecialtyId = addSpecialty(formData.newSpecialty);
       if (typeof newSpecialtyId === 'number') {
         specialtyId = newSpecialtyId;
@@ -138,7 +137,6 @@ export default function ProfessionalFormModal({
     let locationName = formData.locationName;
     
     if (formData.newLocation) {
-      // Corrigindo o erro de TypeScript: não tratar o retorno como booleano
       const newLocationId = addLocation(formData.newLocation);
       if (typeof newLocationId === 'number') {
         locationId = newLocationId;
@@ -200,6 +198,12 @@ export default function ProfessionalFormModal({
   
   const handleCancel = () => {
     setIsReviewOpen(false);
+  };
+  
+  const handleCloseReview = (open: boolean) => {
+    if (!open) {
+      setIsReviewOpen(false);
+    }
   };
   
   return (
@@ -316,7 +320,7 @@ export default function ProfessionalFormModal({
         </DialogContent>
       </Dialog>
       
-      <AlertDialog open={isReviewOpen} onOpenChange={setIsReviewOpen}>
+      <AlertDialog open={isReviewOpen} onOpenChange={handleCloseReview}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Revisar Profissional</AlertDialogTitle>

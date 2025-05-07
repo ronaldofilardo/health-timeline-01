@@ -238,7 +238,7 @@ export default function EventCard({ event, position, onClick }: EventCardProps) 
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Confirmation dialog with Yes/No options */}
+      {/* Confirmação de evento com botões Sim/Não */}
       <AlertDialog open={isConfirmationOpen} onOpenChange={setIsConfirmationOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

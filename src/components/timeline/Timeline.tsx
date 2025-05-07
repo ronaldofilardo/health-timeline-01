@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -6,12 +7,16 @@ import { Event } from '@/types';
 import { formatDateHeader } from '@/utils/dateUtils';
 import EventCard from './EventCard';
 import EventDetailsModal from './EventDetailsModal';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export default function Timeline() {
   const { events, holidays } = useHealth();
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [groupedEvents, setGroupedEvents] = useState<Record<string, Event[]>>({});
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Group events by date
@@ -58,7 +63,18 @@ export default function Timeline() {
   };
 
   return (
-    <div className="timeline-container">
+    <div className="timeline-container relative">
+      {/* Botão de atalho para criar evento */}
+      <div className="fixed bottom-6 right-6 z-10">
+        <Button 
+          onClick={() => navigate('/event/new')} 
+          size="lg" 
+          className="rounded-full h-14 w-14 shadow-lg"
+        >
+          <Plus className="h-6 w-6" />
+        </Button>
+      </div>
+      
       <div className="timeline-line"></div>
       
       {sortedDates.length === 0 ? (

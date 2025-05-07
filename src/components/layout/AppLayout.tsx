@@ -1,160 +1,126 @@
+
 import { ReactNode, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import { Sheet, SheetContent, SheetTrigger } from '../ui/sheet';
 import { Button } from '../ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { Menu, X, CalendarDays, Users, FolderArchive, Settings, Download, Upload } from 'lucide-react';
+import { useIsMobile as useMobile } from '@/hooks/use-mobile';
+import { Menu, X, CalendarDays, Users, FolderArchive, Settings, Download, Upload, PlusCircle } from 'lucide-react';
 
-interface AppLayoutProps {
+export interface AppLayoutProps {
   children: ReactNode;
   title: string;
 }
 
 export function AppLayout({ children, title }: AppLayoutProps) {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const isMobile = useMobile();
   const { toast } = useToast();
-  const navigate = useNavigate();
-  const isMobile = useIsMobile();
-  
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-  };
-  
-  const handleNavigate = (path: string) => {
-    navigate(path);
-    if (isMobile) {
-      setIsMenuOpen(false);
-    }
-  };
-  
-  const handleSignOut = () => {
-    navigate('/login');
-    toast({
-      title: 'Sessão encerrada',
-      description: 'Você foi desconectado da sua conta.'
-    });
-  };
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const location = useLocation();
+
+  const menuItems = [
+    { label: 'Timeline', path: '/', icon: CalendarDays },
+    { label: 'Criar Evento', path: '/event/new', icon: PlusCircle },
+    { label: 'Calendário', path: '/calendar', icon: CalendarDays },
+    { label: 'Gerenciar Profissionais', path: '/professionals', icon: Users },
+    { label: 'Arquivos', path: '/files', icon: FolderArchive },
+    { label: 'Backup e Restauração', path: '/backup', icon: Settings },
+  ];
+
+  const closeMenu = () => setIsMenuOpen(false);
 
   return (
-    <div className="flex h-screen bg-gray-100 overflow-hidden">
-      {/* Sidebar for desktop and overlay menu for mobile */}
-      <div
-        className={`${
-          isMobile
-            ? `fixed inset-0 z-50 transform ${
-                isMenuOpen ? "translate-x-0" : "-translate-x-full"
-              } transition-transform duration-300 ease-in-out`
-            : "relative w-64 min-w-64"
-        } bg-white border-r border-gray-200 pt-16`}
-      >
-        {isMobile && (
-          <div className="absolute top-4 right-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleMenu}
-              className="text-gray-500"
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container flex h-14 items-center">
+          <div className="mr-4 flex">
+            <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+              <SheetTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="md:hidden"
+                >
+                  <Menu className="h-5 w-5" />
+                  <span className="sr-only">Toggle menu</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-[240px] sm:w-[300px]">
+                <div className="px-2 py-6 flex flex-col gap-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-semibold">Menu</h2>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <nav className="flex flex-col gap-2">
+                    {menuItems.map((item) => (
+                      <Link
+                        key={item.path}
+                        to={item.path}
+                        onClick={closeMenu}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm ${
+                          location.pathname === item.path
+                            ? "bg-primary text-primary-foreground"
+                            : "hover:bg-accent hover:text-accent-foreground"
+                        }`}
+                      >
+                        <item.icon className="h-4 w-4" />
+                        {item.label}
+                      </Link>
+                    ))}
+                  </nav>
+                </div>
+              </SheetContent>
+            </Sheet>
+            <Link 
+              to="/" 
+              className="hidden md:flex items-center gap-2 font-semibold"
             >
-              <X className="h-5 w-5" />
-            </Button>
+              Health Timeline
+            </Link>
           </div>
-        )}
-        <div className="px-4 py-6">
-          <h2 className="text-xl font-semibold mb-6 px-4">Menu</h2>
-          <div className="space-y-1">
-            <Button
-              variant="ghost"
-              className="w-full justify-start text-gray-600"
-              onClick={() => handleNavigate('/')}
-            >
-              <FolderArchive className="h-5 w-5 mr-3" />
-              <span>Timeline</span>
-            </Button>
-            <Button
-              variant="ghost"
-              className="w-full justify-start text-gray-600"
-              onClick={() => handleNavigate('/calendar')}
-            >
-              <CalendarDays className="h-5 w-5 mr-3" />
-              <span>Calendário</span>
-            </Button>
-            <Button
-              variant="ghost"
-              className="w-full justify-start text-gray-600"
-              onClick={() => handleNavigate('/professionals')}
-            >
-              <Users className="h-5 w-5 mr-3" />
-              <span>Profissionais</span>
-            </Button>
-            <Button
-              variant="ghost"
-              className="w-full justify-start text-gray-600"
-              onClick={() => handleNavigate('/files')}
-            >
-              <FolderArchive className="h-5 w-5 mr-3" />
-              <span>Arquivos</span>
-            </Button>
-            <Button
-              variant="ghost"
-              className="w-full justify-start text-gray-600"
-              onClick={() => handleNavigate('/backup')}
-            >
-              <Download className="h-5 w-5 mr-3" />
-              <span>Backup e Restauração</span>
-            </Button>
-          </div>
-
-          <div className="mt-6 pt-6 border-t border-gray-100">
-            <Button
-              variant="ghost"
-              className="w-full justify-start text-gray-600 opacity-50 cursor-not-allowed"
-            >
-              <Settings className="h-5 w-5 mr-3" />
-              <span>Configurações</span>
-            </Button>
-            <Button
-              variant="ghost"
-              className="w-full justify-start text-red-600"
-              onClick={handleSignOut}
-            >
-              <X className="h-5 w-5 mr-3" />
-              <span>Sair</span>
-            </Button>
+          <div className="flex-1 flex items-center justify-between">
+            <nav className="hidden md:flex gap-6 ml-6">
+              {menuItems.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`flex items-center gap-2 text-sm ${
+                    location.pathname === item.path
+                      ? "text-foreground font-medium"
+                      : "text-foreground/60 hover:text-foreground"
+                  }`}
+                >
+                  <item.icon className="h-4 w-4" />
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+            <div className="ml-auto flex items-center gap-2">
+              {/* Placeholder for user profile or other header items */}
+            </div>
           </div>
         </div>
-      </div>
+      </header>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top bar */}
-        <div className="bg-white border-b border-gray-200 p-4 flex items-center justify-between">
-          {isMobile && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleMenu}
-              className="mr-2"
-            >
-              <Menu className="h-5 w-5" />
-            </Button>
-          )}
-          <h1 className="text-xl font-semibold">{title}</h1>
-          <div>{/* Placeholder for right-aligned content */}</div>
-        </div>
+      <main className="container py-6">
+        <h1 className="text-2xl font-bold mb-6">{title}</h1>
+        {children}
+      </main>
 
-        {/* Page content */}
-        <div className="flex-1 overflow-auto p-4">
-          <div className="max-w-6xl mx-auto">{children}</div>
+      {/* Footer */}
+      <footer className="border-t py-4 mt-auto">
+        <div className="container text-center text-sm text-muted-foreground">
+          &copy; {new Date().getFullYear()} Health Timeline
         </div>
-      </div>
-
-      {/* Overlay for mobile menu */}
-      {isMenuOpen && isMobile && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40"
-          onClick={toggleMenu}
-        />
-      )}
+      </footer>
     </div>
   );
 }
