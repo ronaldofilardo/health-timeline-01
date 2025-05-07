@@ -3,11 +3,10 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format, parse, startOfWeek, addDays, isEqual, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Calendar as ReactCalendar } from 'react-day-picker';
 import { Button } from '@/components/ui/button';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Calendar } from '@/components/ui/calendar';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, FileDown } from 'lucide-react';
 import { useHealth } from '@/context/HealthContext';
 import CalendarFilter from '@/components/calendar/CalendarFilter';
 import { Event } from '@/types';
@@ -179,6 +178,7 @@ export default function CalendarPage() {
                 onClick={handleExportPDF}
                 disabled={filteredEvents.length === 0}
               >
+                <FileDown className="h-4 w-4 mr-2" />
                 Exportar PDF
               </Button>
             </div>

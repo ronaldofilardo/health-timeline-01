@@ -45,6 +45,13 @@ export default function ProfessionalsManagement() {
     );
   };
   
+  const handleProfessionalAdded = (professional: Professional) => {
+    toast({
+      title: "Profissional adicionado",
+      description: `${professional.name} foi adicionado à lista de profissionais`
+    });
+  };
+  
   const activeProfessionals = professionals.filter(p => !p.isDeleted);
   
   return (
@@ -103,6 +110,7 @@ export default function ProfessionalsManagement() {
       <ProfessionalFormModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
+        onProfessionalAdded={handleProfessionalAdded}
       />
       
       {/* Edit Professional Modal */}
@@ -114,6 +122,7 @@ export default function ProfessionalsManagement() {
             setSelectedProfessional(null);
           }}
           professional={selectedProfessional}
+          onProfessionalAdded={handleProfessionalAdded}
         />
       )}
       

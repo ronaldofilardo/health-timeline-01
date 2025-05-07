@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Edit, Trash2, File, CheckCircle } from 'lucide-react';
+import { Edit, Trash2, File, CheckCircle, Check, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Event } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -23,6 +23,7 @@ export default function EventCard({ event, position, onClick }: EventCardProps) 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deleteFiles, setDeleteFiles] = useState(false);
   const [isFileManagementOpen, setIsFileManagementOpen] = useState(false);
+  const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
 
   // Determine background color based on event status
   const getCardStyles = () => {
@@ -68,11 +69,25 @@ export default function EventCard({ event, position, onClick }: EventCardProps) 
 
   const handleConfirmClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    confirmEvent(event.id);
+    setIsConfirmationOpen(true);
+  };
+
+  const handleConfirmYes = () => {
+    confirmEvent(event.id, true);
     toast({
       title: "Evento confirmado",
       description: "O evento foi confirmado com sucesso.",
     });
+    setIsConfirmationOpen(false);
+  };
+
+  const handleConfirmNo = () => {
+    confirmEvent(event.id, false);
+    toast({
+      title: "Evento não atendido",
+      description: "O evento foi marcado como não atendido.",
+    });
+    setIsConfirmationOpen(false);
   };
 
   const handleDeleteConfirm = () => {
@@ -92,7 +107,7 @@ export default function EventCard({ event, position, onClick }: EventCardProps) 
   // Check if event can be confirmed (sessions and prescriptions only, within time window)
   const canConfirm = () => {
     // Already confirmed events can't be confirmed again
-    if (event.isConfirmed) return false;
+    if (event.isConfirmed !== undefined) return false;
     
     // Only sessions and prescriptions can be confirmed
     if (event.type !== 'Sessões' && event.type !== 'Prescrição') return false;
@@ -186,7 +201,7 @@ export default function EventCard({ event, position, onClick }: EventCardProps) 
                 disabled
                 className="text-xs opacity-50"
               >
-                {event.isConfirmed ? "Confirmado" : "Não Confirmado"}
+                {event.isConfirmed === true ? "Confirmado" : event.isConfirmed === false ? "Não Atendido" : "Não Confirmado"}
               </Button>
             )
           )}
@@ -219,6 +234,28 @@ export default function EventCard({ event, position, onClick }: EventCardProps) 
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeleteConfirm}>Confirmar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Confirmation dialog with Yes/No options */}
+      <AlertDialog open={isConfirmationOpen} onOpenChange={setIsConfirmationOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar atendimento</AlertDialogTitle>
+            <AlertDialogDescription>
+              Você compareceu a este {event.type.toLowerCase()}?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex justify-between sm:justify-between">
+            <Button variant="destructive" onClick={handleConfirmNo} className="gap-2">
+              <X className="h-4 w-4" />
+              Não
+            </Button>
+            <Button variant="default" onClick={handleConfirmYes} className="gap-2">
+              <Check className="h-4 w-4" />
+              Sim
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

@@ -1,141 +1,161 @@
 
-import { useState, ReactNode } from 'react';
-import { Menu, X, Calendar, Users, FilePlus, Settings, LogOut, FileText } from 'lucide-react';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Button } from '@/components/ui/button';
-import { useAuth } from '@/context/AuthContext';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { ReactNode, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '../ui/button';
+import { useToast } from '@/hooks/use-toast';
+import { useMobile } from '@/hooks/use-mobile';
+import { Menu, X, CalendarDays, Users, FolderArchive, Settings, Download, Upload } from 'lucide-react';
 
 interface AppLayoutProps {
   children: ReactNode;
-  title?: string;
+  title: string;
 }
 
-export function AppLayout({ children, title = "Health Timeline" }: AppLayoutProps) {
+export function AppLayout({ children, title }: AppLayoutProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { logout } = useAuth();
+  const { toast } = useToast();
   const navigate = useNavigate();
-  const location = useLocation();
-
-  const handleNavigation = (path: string) => {
-    navigate(path);
-    setIsMenuOpen(false);
+  const isMobile = useMobile();
+  
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
   };
-
-  const handleLogout = () => {
-    logout();
+  
+  const handleNavigate = (path: string) => {
+    navigate(path);
+    if (isMobile) {
+      setIsMenuOpen(false);
+    }
+  };
+  
+  const handleSignOut = () => {
     navigate('/login');
+    toast({
+      title: 'Sessão encerrada',
+      description: 'Você foi desconectado da sua conta.'
+    });
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm sticky top-0 z-10">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:hidden">
-                  <Menu className="h-6 w-6" />
-                  <span className="sr-only">Menu</span>
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="w-[250px] sm:w-[300px]">
-                <div className="py-4">
-                  <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-lg font-semibold">Menu</h2>
-                    <Button variant="ghost" size="icon" onClick={() => setIsMenuOpen(false)}>
-                      <X className="h-5 w-5" />
-                    </Button>
-                  </div>
-                  <nav className="space-y-2">
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start"
-                      onClick={() => handleNavigation('/event/new')}
-                    >
-                      <FilePlus className="mr-2 h-5 w-5" />
-                      Criar Evento
-                    </Button>
-                    
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start"
-                      onClick={() => handleNavigation('/professionals')}
-                    >
-                      <Users className="mr-2 h-5 w-5" />
-                      Profissionais
-                    </Button>
-                    
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start"
-                      onClick={() => handleNavigation('/files')}
-                    >
-                      <FileText className="mr-2 h-5 w-5" />
-                      Repositório de Arquivos
-                    </Button>
-                    
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start"
-                      onClick={() => handleNavigation('/calendar')}
-                    >
-                      <Calendar className="mr-2 h-5 w-5" />
-                      Calendário
-                    </Button>
-                    
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start opacity-50"
-                      disabled
-                    >
-                      <Settings className="mr-2 h-5 w-5" />
-                      Configurações
-                    </Button>
-                    
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50"
-                      onClick={handleLogout}
-                    >
-                      <LogOut className="mr-2 h-5 w-5" />
-                      Sair
-                    </Button>
-                  </nav>
-                </div>
-              </SheetContent>
-            </Sheet>
-            
-            <div className="hidden md:flex md:items-center">
-              <Button
-                variant="ghost"
-                className="p-2"
-                onClick={() => setIsMenuOpen(true)}
-              >
-                <Menu className="h-5 w-5" />
-              </Button>
-            </div>
-            
-            <h1 className="text-xl font-bold">
-              {title || "Health Timeline – Tudo o que importa em suas mãos"}
-            </h1>
-          </div>
-          
-          {location.pathname === '/' && (
+    <div className="flex h-screen bg-gray-100 overflow-hidden">
+      {/* Sidebar for desktop and overlay menu for mobile */}
+      <div
+        className={`${
+          isMobile
+            ? `fixed inset-0 z-50 transform ${
+                isMenuOpen ? "translate-x-0" : "-translate-x-full"
+              } transition-transform duration-300 ease-in-out`
+            : "relative w-64 min-w-64"
+        } bg-white border-r border-gray-200 pt-16`}
+      >
+        {isMobile && (
+          <div className="absolute top-4 right-4">
             <Button
-              onClick={() => navigate('/event/new')}
-              className="bg-health-primary hover:bg-green-600 text-white"
+              variant="ghost"
+              size="sm"
+              onClick={toggleMenu}
+              className="text-gray-500"
             >
-              <FilePlus className="mr-2 h-5 w-5" />
-              Criar Evento
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
+        )}
+        <div className="px-4 py-6">
+          <h2 className="text-xl font-semibold mb-6 px-4">Menu</h2>
+          <div className="space-y-1">
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-gray-600"
+              onClick={() => handleNavigate('/')}
+            >
+              <FolderArchive className="h-5 w-5 mr-3" />
+              <span>Timeline</span>
+            </Button>
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-gray-600"
+              onClick={() => handleNavigate('/calendar')}
+            >
+              <CalendarDays className="h-5 w-5 mr-3" />
+              <span>Calendário</span>
+            </Button>
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-gray-600"
+              onClick={() => handleNavigate('/professionals')}
+            >
+              <Users className="h-5 w-5 mr-3" />
+              <span>Profissionais</span>
+            </Button>
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-gray-600"
+              onClick={() => handleNavigate('/files')}
+            >
+              <FolderArchive className="h-5 w-5 mr-3" />
+              <span>Arquivos</span>
+            </Button>
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-gray-600"
+              onClick={() => handleNavigate('/backup')}
+            >
+              <Download className="h-5 w-5 mr-3" />
+              <span>Backup e Restauração</span>
+            </Button>
+          </div>
+
+          <div className="mt-6 pt-6 border-t border-gray-100">
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-gray-600 opacity-50 cursor-not-allowed"
+            >
+              <Settings className="h-5 w-5 mr-3" />
+              <span>Configurações</span>
+            </Button>
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-red-600"
+              onClick={handleSignOut}
+            >
+              <X className="h-5 w-5 mr-3" />
+              <span>Sair</span>
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Top bar */}
+        <div className="bg-white border-b border-gray-200 p-4 flex items-center justify-between">
+          {isMobile && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleMenu}
+              className="mr-2"
+            >
+              <Menu className="h-5 w-5" />
             </Button>
           )}
+          <h1 className="text-xl font-semibold">{title}</h1>
+          <div>{/* Placeholder for right-aligned content */}</div>
         </div>
-      </header>
 
-      <main className="container mx-auto px-4 py-6">
-        {children}
-      </main>
+        {/* Page content */}
+        <div className="flex-1 overflow-auto p-4">
+          <div className="max-w-6xl mx-auto">{children}</div>
+        </div>
+      </div>
+
+      {/* Overlay for mobile menu */}
+      {isMenuOpen && isMobile && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-40"
+          onClick={toggleMenu}
+        />
+      )}
     </div>
   );
 }

@@ -22,7 +22,7 @@ export interface Event {
   observation?: string;
   isFirstConsultation?: boolean; // Only for Consulta
   preparation?: string; // Only for Exame
-  isConfirmed: boolean;
+  isConfirmed?: boolean;
   confirmationDeadline?: string; // ISO date string
   files: EventFile[];
   status: EventStatus;

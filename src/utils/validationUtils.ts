@@ -219,30 +219,32 @@ export const checkEventOverlaps = (
     const differentLocation = newEvent.locationName !== event.locationName;
     
     if (differentLocation) {
-      // Calculate buffer times
-      const oneHourBeforeEventStart = new Date(eventStart);
-      oneHourBeforeEventStart.setHours(oneHourBeforeEventStart.getHours() - 1);
+      // Calculate buffer times (59 minutes instead of 1 hour)
+      const bufferedMinutes = 59;
       
-      const oneHourAfterEventEnd = new Date(eventEnd);
-      oneHourAfterEventEnd.setHours(oneHourAfterEventEnd.getHours() + 1);
+      const bufferBeforeEventStart = new Date(eventStart);
+      bufferBeforeEventStart.setMinutes(bufferBeforeEventStart.getMinutes() - bufferedMinutes);
       
-      // New event starts during the 1-hour period before another event
-      const newEventStartsInBuffer = startTime >= oneHourBeforeEventStart && startTime <= eventStart;
+      const bufferAfterEventEnd = new Date(eventEnd);
+      bufferAfterEventEnd.setMinutes(bufferAfterEventEnd.getMinutes() + bufferedMinutes);
       
-      // New event ends during the 1-hour period after another event
-      const newEventEndsInBuffer = endTime! >= eventEnd && endTime! <= oneHourAfterEventEnd;
+      // New event starts during the buffer period before another event
+      const newEventStartsInBuffer = startTime >= bufferBeforeEventStart && startTime <= eventStart;
+      
+      // New event ends during the buffer period after another event
+      const newEventEndsInBuffer = endTime! >= eventEnd && endTime! <= bufferAfterEventEnd;
       
       // New event spans over another event's buffer time
-      const newEventSpansBuffer = startTime <= oneHourBeforeEventStart && endTime! >= eventStart;
+      const newEventSpansBuffer = startTime <= bufferBeforeEventStart && endTime! >= eventStart;
       
       // New event start time falls within the existing event plus its buffer
-      const startsDuringEventOrBuffer = startTime >= oneHourBeforeEventStart && startTime <= oneHourAfterEventEnd;
+      const startsDuringEventOrBuffer = startTime >= bufferBeforeEventStart && startTime <= bufferAfterEventEnd;
       
       // New event end time falls within the existing event plus its buffer
-      const endsDuringEventOrBuffer = endTime! >= oneHourBeforeEventStart && endTime! <= oneHourAfterEventEnd;
+      const endsDuringEventOrBuffer = endTime! >= bufferBeforeEventStart && endTime! <= bufferAfterEventEnd;
       
       // New event completely encloses the existing event and its buffers
-      const enclosesEventAndBuffer = startTime <= oneHourBeforeEventStart && endTime! >= oneHourAfterEventEnd;
+      const enclosesEventAndBuffer = startTime <= bufferBeforeEventStart && endTime! >= bufferAfterEventEnd;
       
       return newEventStartsInBuffer || newEventEndsInBuffer || newEventSpansBuffer || 
              startsDuringEventOrBuffer || endsDuringEventOrBuffer || enclosesEventAndBuffer;
@@ -255,7 +257,7 @@ export const checkEventOverlaps = (
     const violation = intervalViolations[0];
     return { 
       hasOverlap: true, 
-      message: `Necessário intervalo de 1 hora entre eventos em locais diferentes.
+      message: `Necessário intervalo de 59 minutos entre eventos em locais diferentes.
         Evento "${violation.type} - ${violation.professionalName}" às ${violation.startTime}`
     };
   }

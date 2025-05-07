@@ -13,8 +13,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 interface ProfessionalFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onProfessionalAdded: (professional: Professional) => void;
   professional?: Professional;
+  onProfessionalAdded?: (professional: Professional) => void;
 }
 
 export default function ProfessionalFormModal({
@@ -125,7 +125,7 @@ export default function ProfessionalFormModal({
     let specialtyName = formData.specialtyName;
     
     if (formData.newSpecialty) {
-      // This is the fix for TS1345: don't treat return value as boolean
+      // Corrigindo o erro de TypeScript: não tratar o retorno como booleano
       const newSpecialtyId = addSpecialty(formData.newSpecialty);
       if (typeof newSpecialtyId === 'number') {
         specialtyId = newSpecialtyId;
@@ -138,7 +138,7 @@ export default function ProfessionalFormModal({
     let locationName = formData.locationName;
     
     if (formData.newLocation) {
-      // This is the fix for TS1345: don't treat return value as boolean
+      // Corrigindo o erro de TypeScript: não tratar o retorno como booleano
       const newLocationId = addLocation(formData.newLocation);
       if (typeof newLocationId === 'number') {
         locationId = newLocationId;
@@ -186,14 +186,20 @@ export default function ProfessionalFormModal({
         description: `${formData.name} foi adicionado com sucesso.`
       });
       
-      onProfessionalAdded({
-        ...professionalData,
-        id: professionalData.id || 0
-      });
+      if (onProfessionalAdded) {
+        onProfessionalAdded({
+          ...professionalData,
+          id: professionalData.id || 0
+        });
+      }
     }
     
     setIsReviewOpen(false);
     onClose();
+  };
+  
+  const handleCancel = () => {
+    setIsReviewOpen(false);
   };
   
   return (
@@ -213,7 +219,7 @@ export default function ProfessionalFormModal({
                 id="name"
                 value={formData.name}
                 onChange={(e) => handleChange('name', e.target.value)}
-                className={errors.name ? 'border-red-500' : ''}
+                className={errors.name ? 'border-red-500 animate-pulse' : ''}
               />
               {errors.name && (
                 <p className="text-xs text-red-500">{errors.name}</p>
@@ -228,7 +234,7 @@ export default function ProfessionalFormModal({
               >
                 <SelectTrigger 
                   id="specialty" 
-                  className={errors.specialty ? 'border-red-500' : ''}
+                  className={errors.specialty ? 'border-red-500 animate-pulse' : ''}
                 >
                   <SelectValue placeholder="Selecione a especialidade" />
                 </SelectTrigger>
@@ -250,7 +256,7 @@ export default function ProfessionalFormModal({
                   placeholder="Digite a nova especialidade"
                   value={formData.newSpecialty}
                   onChange={(e) => handleChange('newSpecialty', e.target.value)}
-                  className={`mt-2 ${errors.specialty ? 'border-red-500' : ''}`}
+                  className={`mt-2 ${errors.specialty ? 'border-red-500 animate-pulse' : ''}`}
                 />
               )}
               
@@ -267,7 +273,7 @@ export default function ProfessionalFormModal({
               >
                 <SelectTrigger 
                   id="location" 
-                  className={errors.location ? 'border-red-500' : ''}
+                  className={errors.location ? 'border-red-500 animate-pulse' : ''}
                 >
                   <SelectValue placeholder="Selecione o local" />
                 </SelectTrigger>
@@ -289,7 +295,7 @@ export default function ProfessionalFormModal({
                   placeholder="Digite o novo local"
                   value={formData.newLocation}
                   onChange={(e) => handleChange('newLocation', e.target.value)}
-                  className={`mt-2 ${errors.location ? 'border-red-500' : ''}`}
+                  className={`mt-2 ${errors.location ? 'border-red-500 animate-pulse' : ''}`}
                 />
               )}
               
@@ -346,7 +352,7 @@ export default function ProfessionalFormModal({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Corrigir</AlertDialogCancel>
+            <AlertDialogCancel onClick={handleCancel}>Corrigir</AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirm}>
               {professional ? 'Atualizar' : 'Confirmar'}
             </AlertDialogAction>

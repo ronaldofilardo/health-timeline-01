@@ -18,14 +18,16 @@ interface HealthContextType {
   addProfessional: (professional: Omit<Professional, 'id'>) => void;
   updateProfessional: (professional: Professional) => void;
   deleteProfessional: (professionalId: number) => void;
-  addSpecialty: (name: string) => void;
-  addLocation: (name: string) => void;
-  confirmEvent: (eventId: number) => void;
+  addSpecialty: (name: string) => number;
+  addLocation: (name: string) => number;
+  confirmEvent: (eventId: number, attended: boolean) => void;
   getEventById: (eventId: number) => Event | undefined;
   getProfessionalById: (professionalId: number) => Professional | undefined;
   getEventStatus: (event: Event) => EventStatus;
   addFileToEvent: (eventId: number, fileType: FileType, path: string) => void;
   removeFileFromEvent: (eventId: number, fileId: number) => void;
+  exportData: () => string;
+  importData: (jsonData: string) => { success: boolean; message: string };
 }
 
 const HealthContext = createContext<HealthContextType | undefined>(undefined);
@@ -233,7 +235,7 @@ export function HealthProvider({ children }: { children: ReactNode }) {
     
     return specialties.find(s => 
       s.name.toLowerCase() === name.toLowerCase()
-    )?.id;
+    )?.id || 0;
   };
 
   // Add a new location
@@ -253,14 +255,14 @@ export function HealthProvider({ children }: { children: ReactNode }) {
     
     return locations.find(l => 
       l.name.toLowerCase() === name.toLowerCase()
-    )?.id;
+    )?.id || 0;
   };
 
   // Confirm an event
-  const confirmEvent = (eventId: number) => {
+  const confirmEvent = (eventId: number, attended: boolean) => {
     setEvents(events.map(event => 
       event.id === eventId ? 
-        { ...event, isConfirmed: true } : 
+        { ...event, isConfirmed: attended } : 
         event
     ));
   };
@@ -304,6 +306,120 @@ export function HealthProvider({ children }: { children: ReactNode }) {
     });
     
     setEvents(updatedEvents);
+  };
+
+  // Export data to JSON
+  const exportData = () => {
+    const dataToExport = {
+      events: events.map(event => ({
+        ...event,
+        uuid: crypto.randomUUID() // Add UUID for import identification
+      })),
+      professionals: professionals.map(prof => ({
+        ...prof,
+        uuid: crypto.randomUUID() // Add UUID for import identification
+      })),
+      specialties,
+      locations,
+      holidays
+    };
+    
+    return JSON.stringify(dataToExport, null, 2);
+  };
+
+  // Import data from JSON
+  const importData = (jsonData: string) => {
+    try {
+      const parsedData = JSON.parse(jsonData);
+      
+      // Validate data structure
+      if (!parsedData.events || !Array.isArray(parsedData.events)) {
+        return { success: false, message: "Formato de dados inválido: 'events' não encontrado ou não é um array" };
+      }
+      
+      if (!parsedData.professionals || !Array.isArray(parsedData.professionals)) {
+        return { success: false, message: "Formato de dados inválido: 'professionals' não encontrado ou não é um array" };
+      }
+
+      // Create mapping for professionals
+      const professionalsMap = new Map();
+      parsedData.professionals.forEach((prof: any) => {
+        const newId = professionals.length > 0 ? Math.max(...professionals.map(p => p.id)) + professionalsMap.size + 1 : professionalsMap.size + 1;
+        professionalsMap.set(prof.id, newId);
+      });
+      
+      // Import professionals with new IDs
+      const newProfessionals = parsedData.professionals.map((prof: any) => ({
+        ...prof,
+        id: professionalsMap.get(prof.id) || prof.id
+      }));
+      
+      // Import events with updated professional IDs
+      const newEvents = parsedData.events.map((event: any) => ({
+        ...event,
+        id: events.length > 0 ? Math.max(...events.map(e => e.id)) + 1 : 1,
+        professionalId: professionalsMap.get(event.professionalId) || event.professionalId,
+        status: getEventStatus(event)
+      }));
+      
+      // Import specialties
+      let newSpecialties = [...specialties];
+      if (parsedData.specialties && Array.isArray(parsedData.specialties)) {
+        parsedData.specialties.forEach((spec: any) => {
+          if (!specialties.some(s => s.name === spec.name)) {
+            newSpecialties.push({
+              id: specialties.length > 0 ? Math.max(...specialties.map(s => s.id)) + 1 : 1,
+              name: spec.name
+            });
+          }
+        });
+      }
+      
+      // Import locations
+      let newLocations = [...locations];
+      if (parsedData.locations && Array.isArray(parsedData.locations)) {
+        parsedData.locations.forEach((loc: any) => {
+          if (!locations.some(l => l.name === loc.name)) {
+            newLocations.push({
+              id: locations.length > 0 ? Math.max(...locations.map(l => l.id)) + 1 : 1,
+              name: loc.name
+            });
+          }
+        });
+      }
+      
+      // Import holidays
+      let newHolidays = [...holidays];
+      if (parsedData.holidays && Array.isArray(parsedData.holidays)) {
+        parsedData.holidays.forEach((hol: any) => {
+          if (!holidays.some(h => h.date === hol.date)) {
+            newHolidays.push({
+              id: holidays.length > 0 ? Math.max(...holidays.map(h => h.id)) + 1 : 1,
+              date: hol.date,
+              name: hol.name,
+              isRecurring: hol.isRecurring
+            });
+          }
+        });
+      }
+      
+      // Update state
+      setProfessionals([...professionals, ...newProfessionals]);
+      setEvents([...events, ...newEvents]);
+      setSpecialties(newSpecialties);
+      setLocations(newLocations);
+      setHolidays(newHolidays);
+      
+      return { 
+        success: true, 
+        message: `Importação concluída: ${newProfessionals.length} profissionais, ${newEvents.length} eventos, ${newSpecialties.length - specialties.length} especialidades, ${newLocations.length - locations.length} locais, ${newHolidays.length - holidays.length} feriados` 
+      };
+    } catch (error) {
+      return { 
+        success: false, 
+        message: `Erro na importação: ${(error as Error).message}` 
+      };
+    }
   };
 
   // Get an event by ID
@@ -358,7 +474,9 @@ export function HealthProvider({ children }: { children: ReactNode }) {
       getProfessionalById,
       getEventStatus,
       addFileToEvent,
-      removeFileFromEvent
+      removeFileFromEvent,
+      exportData,
+      importData
     }}>
       {children}
     </HealthContext.Provider>
