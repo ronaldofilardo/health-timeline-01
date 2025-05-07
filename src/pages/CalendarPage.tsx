@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format, parse, startOfWeek, addDays, isEqual, parseISO } from 'date-fns';
@@ -183,7 +182,15 @@ export default function CalendarPage() {
               </Button>
             </div>
             
-            <CalendarFilter events={filteredEvents} />
+            <div className="events-list">
+              {filteredEvents.length === 0 ? (
+                <p className="text-center text-gray-500 my-8">
+                  Não há eventos para o período selecionado.
+                </p>
+              ) : (
+                <CalendarFilter events={filteredEvents} />
+              )}
+            </div>
           </div>
         </div>
       </div>

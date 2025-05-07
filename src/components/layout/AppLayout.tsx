@@ -1,9 +1,8 @@
-
 import { ReactNode, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { useMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Menu, X, CalendarDays, Users, FolderArchive, Settings, Download, Upload } from 'lucide-react';
 
 interface AppLayoutProps {
@@ -15,7 +14,7 @@ export function AppLayout({ children, title }: AppLayoutProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
   
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
