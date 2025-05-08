@@ -2,9 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useHealth } from '@/context/HealthContext';
-import AppLayout from '@/components/layout/AppLayout';
+import { AppLayout } from '@/components/layout/AppLayout';
 import { format } from 'date-fns';
-import { EventForm } from '@/components/events/EventForm';
+import EventForm from '@/components/events/EventForm';
 import { Event } from '@/types';
 
 const EventPage = () => {
@@ -20,10 +20,7 @@ const EventPage = () => {
     eventDate: format(new Date(), 'dd/MM/yyyy'),
     startTime: format(new Date(), 'HH:mm'),
     endTime: format(new Date(Date.now() + 30 * 60000), 'HH:mm'),
-    notes: '',
-    recurring: false,
-    recurrencePattern: 'weekly',
-    recurrenceEndDate: '',
+    observation: '',
     files: []
   });
 
@@ -40,10 +37,7 @@ const EventPage = () => {
           eventDate: eventToEdit.eventDate,
           startTime: eventToEdit.startTime,
           endTime: eventToEdit.endTime || '',
-          notes: eventToEdit.notes || '',
-          recurring: eventToEdit.recurring || false,
-          recurrencePattern: eventToEdit.recurrencePattern || 'weekly',
-          recurrenceEndDate: eventToEdit.recurrenceEndDate || '',
+          observation: eventToEdit.observation || '',
           files: eventToEdit.files || []
         });
         
@@ -56,12 +50,8 @@ const EventPage = () => {
   }, [isEditMode, eventId, getEventById, navigate]);
 
   return (
-    <AppLayout>
+    <AppLayout title={isEditMode ? 'Editar Evento' : 'Novo Evento'}>
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold mb-6">
-          {isEditMode ? 'Editar Evento' : 'Novo Evento'}
-        </h1>
-        
         <EventForm 
           isEdit={isEditMode} 
           initialData={formData}
