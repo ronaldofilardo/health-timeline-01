@@ -1,7 +1,33 @@
 
-  // Update the EventPage component to correctly load event data when editing
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useHealth } from '@/context/HealthContext';
+import AppLayout from '@/components/layout/AppLayout';
+import { format } from 'date-fns';
+import { EventForm } from '@/components/events/EventForm';
+import { Event } from '@/types';
+
+const EventPage = () => {
+  const { id: eventId } = useParams();
+  const navigate = useNavigate();
+  const { getEventById } = useHealth();
   
-  // Inside the useEffect that fetches event data for editing:
+  const isEditMode = Boolean(eventId);
+  const [professionalName, setProfessionalName] = useState('');
+  const [formData, setFormData] = useState<Partial<Event>>({
+    type: 'Consulta',
+    professionalId: 0,
+    eventDate: format(new Date(), 'dd/MM/yyyy'),
+    startTime: format(new Date(), 'HH:mm'),
+    endTime: format(new Date(Date.now() + 30 * 60000), 'HH:mm'),
+    notes: '',
+    recurring: false,
+    recurrencePattern: 'weekly',
+    recurrenceEndDate: '',
+    files: []
+  });
+
+  // Load event data when editing
   useEffect(() => {
     // Only attempt to load event data if we're in edit mode and have an eventId
     if (isEditMode && eventId) {
@@ -28,3 +54,22 @@
       }
     }
   }, [isEditMode, eventId, getEventById, navigate]);
+
+  return (
+    <AppLayout>
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-2xl font-bold mb-6">
+          {isEditMode ? 'Editar Evento' : 'Novo Evento'}
+        </h1>
+        
+        <EventForm 
+          isEdit={isEditMode} 
+          initialData={formData}
+          professionalName={professionalName}
+        />
+      </div>
+    </AppLayout>
+  );
+};
+
+export default EventPage;
