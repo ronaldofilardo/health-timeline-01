@@ -91,6 +91,7 @@ export default function EventCard({ event, position, onClick }: EventCardProps) 
   };
 
   const handleDeleteConfirm = () => {
+    // Make sure we're only deleting this specific event
     deleteEvent(event.id);
     toast({
       title: "Evento deletado",

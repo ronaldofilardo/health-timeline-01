@@ -19,12 +19,12 @@ export default function ProfessionalsManagement() {
   const [selectedProfessional, setSelectedProfessional] = useState<Professional | null>(null);
   
   const handleEditClick = (professional: Professional) => {
-    setSelectedProfessional(professional);
+    setSelectedProfessional({...professional});
     setIsEditModalOpen(true);
   };
   
   const handleDeleteClick = (professional: Professional) => {
-    setSelectedProfessional(professional);
+    setSelectedProfessional({...professional});
     setIsDeleteDialogOpen(true);
   };
   
@@ -36,6 +36,7 @@ export default function ProfessionalsManagement() {
         description: "O profissional foi excluído com sucesso",
       });
       setIsDeleteDialogOpen(false);
+      setSelectedProfessional(null);
     }
   };
   
@@ -50,6 +51,22 @@ export default function ProfessionalsManagement() {
       title: "Profissional adicionado",
       description: `${professional.name} foi adicionado à lista de profissionais`
     });
+    setIsAddModalOpen(false);
+  };
+  
+  const handleProfessionalUpdated = (professional: Professional) => {
+    toast({
+      title: "Profissional atualizado",
+      description: `${professional.name} foi atualizado com sucesso`
+    });
+    setIsEditModalOpen(false);
+    setSelectedProfessional(null);
+  };
+  
+  const handleModalClose = () => {
+    setIsAddModalOpen(false);
+    setIsEditModalOpen(false);
+    setSelectedProfessional(null);
   };
   
   const activeProfessionals = professionals.filter(p => !p.isDeleted);
@@ -109,7 +126,7 @@ export default function ProfessionalsManagement() {
       {/* Add Professional Modal */}
       <ProfessionalFormModal
         isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
+        onClose={handleModalClose}
         onProfessionalAdded={handleProfessionalAdded}
       />
       
@@ -117,17 +134,17 @@ export default function ProfessionalsManagement() {
       {selectedProfessional && (
         <ProfessionalFormModal
           isOpen={isEditModalOpen}
-          onClose={() => {
-            setIsEditModalOpen(false);
-            setSelectedProfessional(null);
-          }}
+          onClose={handleModalClose}
           professional={selectedProfessional}
-          onProfessionalAdded={handleProfessionalAdded}
+          onProfessionalAdded={handleProfessionalUpdated}
         />
       )}
       
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={(open) => {
+        setIsDeleteDialogOpen(open);
+        if (!open) setSelectedProfessional(null);
+      }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
@@ -149,7 +166,12 @@ export default function ProfessionalsManagement() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => {
+              setIsDeleteDialogOpen(false);
+              setSelectedProfessional(null);
+            }}>
+              Cancelar
+            </AlertDialogCancel>
             <AlertDialogAction onClick={confirmDelete}>Confirmar</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

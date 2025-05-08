@@ -44,19 +44,26 @@ export default function EventForm() {
     observation: '',
     isFirstConsultation: false,
     preparation: '',
-    isConfirmed: false,
     files: []
   });
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [formWarnings, setFormWarnings] = useState<Record<string, string>>({});
+  const [eventLoaded, setEventLoaded] = useState(false);
 
   // Load event data if in edit mode
   useEffect(() => {
-    if (isEditMode && id) {
-      const event = getEventById(parseInt(id, 10));
+    if (isEditMode && id && !eventLoaded) {
+      const eventId = parseInt(id, 10);
+      const event = getEventById(eventId);
+      
       if (event) {
-        setFormState(event);
+        console.log("Loading event for editing:", event);
+        setFormState({
+          ...event,
+          id: eventId
+        });
+        setEventLoaded(true);
       } else {
         toast({
           title: "Evento não encontrado",
@@ -66,7 +73,7 @@ export default function EventForm() {
         navigate('/');
       }
     }
-  }, [isEditMode, id, getEventById, navigate, toast]);
+  }, [isEditMode, id, getEventById, navigate, toast, eventLoaded]);
 
   // Validate date whenever it changes
   useEffect(() => {
@@ -298,7 +305,13 @@ export default function EventForm() {
     // Create or update the event
     try {
       if (isEditMode && id) {
-        updateEvent(formState as Event);
+        // Make sure to preserve the original ID when updating
+        const eventIdNum = parseInt(id, 10);
+        updateEvent({
+          ...formState as Event,
+          id: eventIdNum,
+        });
+        
         toast({
           title: "Evento atualizado",
           description: "O evento foi atualizado com sucesso",
@@ -315,6 +328,7 @@ export default function EventForm() {
       setIsReviewDialogOpen(false);
       navigate('/');
     } catch (error) {
+      console.error("Error saving event:", error);
       toast({
         title: "Erro",
         description: "Ocorreu um erro ao salvar o evento",
@@ -350,6 +364,13 @@ export default function EventForm() {
     
     return true;
   };
+
+  // For debugging in development
+  useEffect(() => {
+    if (isEditMode && eventLoaded) {
+      console.log("Form state after loading event:", formState);
+    }
+  }, [formState, isEditMode, eventLoaded]);
 
   return (
     <>

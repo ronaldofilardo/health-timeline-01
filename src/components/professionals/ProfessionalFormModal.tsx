@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useHealth } from '@/context/HealthContext';
 import { Professional } from '@/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -28,14 +28,29 @@ export default function ProfessionalFormModal({
   
   const [isReviewOpen, setIsReviewOpen] = useState(false);
   const [formData, setFormData] = useState({
-    name: professional?.name || '',
-    specialtyId: professional?.specialtyId || 0,
-    specialtyName: professional?.specialtyName || '',
-    locationId: professional?.locationId || 0,
-    locationName: professional?.locationName || '',
+    name: '',
+    specialtyId: 0,
+    specialtyName: '',
+    locationId: 0,
+    locationName: '',
     newSpecialty: '',
     newLocation: ''
   });
+  
+  // Reset form data when modal opens or professional changes
+  useEffect(() => {
+    if (isOpen) {
+      setFormData({
+        name: professional?.name || '',
+        specialtyId: professional?.specialtyId || 0,
+        specialtyName: professional?.specialtyName || '',
+        locationId: professional?.locationId || 0,
+        locationName: professional?.locationName || '',
+        newSpecialty: '',
+        newLocation: ''
+      });
+    }
+  }, [isOpen, professional]);
   
   const [errors, setErrors] = useState<Record<string, string>>({});
   
@@ -90,6 +105,14 @@ export default function ProfessionalFormModal({
         }));
       }
     }
+    
+    // Clear specialty error if it exists
+    if (errors.specialty) {
+      setErrors(prev => {
+        const { specialty, ...rest } = prev;
+        return rest;
+      });
+    }
   };
   
   const handleLocationSelect = (value: string) => {
@@ -110,6 +133,14 @@ export default function ProfessionalFormModal({
           newLocation: '' 
         }));
       }
+    }
+    
+    // Clear location error if it exists
+    if (errors.location) {
+      setErrors(prev => {
+        const { location, ...rest } = prev;
+        return rest;
+      });
     }
   };
   
@@ -156,59 +187,54 @@ export default function ProfessionalFormModal({
   };
   
   const handleConfirm = () => {
-    const professionalData = {
-      id: professional?.id || 0,
-      name: formData.name,
-      specialtyId: formData.specialtyId,
-      specialtyName: formData.specialtyName,
-      locationId: formData.locationId,
-      locationName: formData.locationName,
-      isDeleted: false
-    };
-    
-    if (professional) {
-      updateProfessional({
-        ...professionalData,
-        id: professional.id
-      });
+    try {
+      const professionalData = {
+        id: professional?.id || 0,
+        name: formData.name,
+        specialtyId: formData.specialtyId,
+        specialtyName: formData.specialtyName,
+        locationId: formData.locationId,
+        locationName: formData.locationName,
+        isDeleted: false
+      };
       
-      toast({
-        title: "Profissional atualizado",
-        description: `${formData.name} foi atualizado com sucesso.`
-      });
-    } else {
-      addProfessional(professionalData);
-      
-      toast({
-        title: "Profissional adicionado",
-        description: `${formData.name} foi adicionado com sucesso.`
-      });
+      if (professional) {
+        updateProfessional({
+          ...professionalData,
+          id: professional.id
+        });
+      } else {
+        addProfessional(professionalData);
+      }
       
       if (onProfessionalAdded) {
         onProfessionalAdded({
           ...professionalData,
-          id: professionalData.id || 0
+          id: professional?.id || professionalData.id
         });
       }
-    }
-    
-    setIsReviewOpen(false);
-    onClose();
-  };
-  
-  const handleCancel = () => {
-    setIsReviewOpen(false);
-  };
-  
-  const handleCloseReview = (open: boolean) => {
-    if (!open) {
+      
       setIsReviewOpen(false);
+      onClose();
+    } catch (error) {
+      console.error("Error saving professional:", error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao salvar o profissional",
+        variant: "destructive",
+      });
     }
+  };
+  
+  const handleCloseDialog = () => {
+    onClose();
+    // Reset errors when dialog closes
+    setErrors({});
   };
   
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={onClose}>
+      <Dialog open={isOpen} onOpenChange={handleCloseDialog}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>
@@ -223,7 +249,7 @@ export default function ProfessionalFormModal({
                 id="name"
                 value={formData.name}
                 onChange={(e) => handleChange('name', e.target.value)}
-                className={errors.name ? 'border-red-500 animate-pulse' : ''}
+                className={errors.name ? 'border-red-500' : ''}
               />
               {errors.name && (
                 <p className="text-xs text-red-500">{errors.name}</p>
@@ -238,7 +264,7 @@ export default function ProfessionalFormModal({
               >
                 <SelectTrigger 
                   id="specialty" 
-                  className={errors.specialty ? 'border-red-500 animate-pulse' : ''}
+                  className={errors.specialty ? 'border-red-500' : ''}
                 >
                   <SelectValue placeholder="Selecione a especialidade" />
                 </SelectTrigger>
@@ -260,7 +286,7 @@ export default function ProfessionalFormModal({
                   placeholder="Digite a nova especialidade"
                   value={formData.newSpecialty}
                   onChange={(e) => handleChange('newSpecialty', e.target.value)}
-                  className={`mt-2 ${errors.specialty ? 'border-red-500 animate-pulse' : ''}`}
+                  className={`mt-2 ${errors.specialty ? 'border-red-500' : ''}`}
                 />
               )}
               
@@ -277,7 +303,7 @@ export default function ProfessionalFormModal({
               >
                 <SelectTrigger 
                   id="location" 
-                  className={errors.location ? 'border-red-500 animate-pulse' : ''}
+                  className={errors.location ? 'border-red-500' : ''}
                 >
                   <SelectValue placeholder="Selecione o local" />
                 </SelectTrigger>
@@ -299,7 +325,7 @@ export default function ProfessionalFormModal({
                   placeholder="Digite o novo local"
                   value={formData.newLocation}
                   onChange={(e) => handleChange('newLocation', e.target.value)}
-                  className={`mt-2 ${errors.location ? 'border-red-500 animate-pulse' : ''}`}
+                  className={`mt-2 ${errors.location ? 'border-red-500' : ''}`}
                 />
               )}
               
@@ -309,7 +335,7 @@ export default function ProfessionalFormModal({
             </div>
             
             <div className="pt-4 flex justify-end space-x-2">
-              <Button type="button" variant="outline" onClick={onClose}>
+              <Button type="button" variant="outline" onClick={handleCloseDialog}>
                 Cancelar
               </Button>
               <Button type="submit">
@@ -320,7 +346,15 @@ export default function ProfessionalFormModal({
         </DialogContent>
       </Dialog>
       
-      <AlertDialog open={isReviewOpen} onOpenChange={handleCloseReview}>
+      <AlertDialog 
+        open={isReviewOpen} 
+        onOpenChange={(open) => {
+          setIsReviewOpen(open);
+          if (!open && !isOpen) {
+            handleCloseDialog();
+          }
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Revisar Profissional</AlertDialogTitle>
@@ -356,7 +390,7 @@ export default function ProfessionalFormModal({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleCancel}>Corrigir</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => setIsReviewOpen(false)}>Corrigir</AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirm}>
               {professional ? 'Atualizar' : 'Confirmar'}
             </AlertDialogAction>
