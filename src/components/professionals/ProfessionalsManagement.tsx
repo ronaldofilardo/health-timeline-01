@@ -127,7 +127,7 @@ export default function ProfessionalsManagement() {
       <ProfessionalFormModal
         isOpen={isAddModalOpen}
         onClose={handleModalClose}
-        onProfessionalAdded={handleProfessionalAdded}
+        onSuccess={handleProfessionalAdded}
       />
       
       {/* Edit Professional Modal */}
@@ -136,7 +136,7 @@ export default function ProfessionalsManagement() {
           isOpen={isEditModalOpen}
           onClose={handleModalClose}
           professional={selectedProfessional}
-          onProfessionalAdded={handleProfessionalUpdated}
+          onSuccess={handleProfessionalUpdated}
         />
       )}
       

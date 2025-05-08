@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useHealth } from '@/context/HealthContext';
 import { Professional } from '@/types';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -14,13 +14,13 @@ interface ProfessionalFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   professional?: Professional;
-  onProfessionalAdded?: (professional: Professional) => void;
+  onSuccess?: (professional: Professional) => void;
 }
 
 export default function ProfessionalFormModal({
   isOpen,
   onClose,
-  onProfessionalAdded,
+  onSuccess,
   professional
 }: ProfessionalFormModalProps) {
   const { toast } = useToast();
@@ -49,6 +49,7 @@ export default function ProfessionalFormModal({
         newSpecialty: '',
         newLocation: ''
       });
+      setErrors({});
     }
   }, [isOpen, professional]);
   
@@ -151,28 +152,22 @@ export default function ProfessionalFormModal({
       return;
     }
     
-    // Handle specialty
+    // Process specialty and location before showing review dialog
     let specialtyId = formData.specialtyId;
     let specialtyName = formData.specialtyName;
-    
-    if (formData.newSpecialty) {
-      const newSpecialtyId = addSpecialty(formData.newSpecialty);
-      if (typeof newSpecialtyId === 'number') {
-        specialtyId = newSpecialtyId;
-        specialtyName = formData.newSpecialty;
-      }
-    }
-    
-    // Handle location
     let locationId = formData.locationId;
     let locationName = formData.locationName;
     
+    if (formData.newSpecialty) {
+      const newSpecialtyId = addSpecialty(formData.newSpecialty);
+      specialtyId = newSpecialtyId;
+      specialtyName = formData.newSpecialty;
+    }
+    
     if (formData.newLocation) {
       const newLocationId = addLocation(formData.newLocation);
-      if (typeof newLocationId === 'number') {
-        locationId = newLocationId;
-        locationName = formData.newLocation;
-      }
+      locationId = newLocationId;
+      locationName = formData.newLocation;
     }
     
     setFormData(prev => ({
@@ -207,8 +202,8 @@ export default function ProfessionalFormModal({
         addProfessional(professionalData);
       }
       
-      if (onProfessionalAdded) {
-        onProfessionalAdded({
+      if (onSuccess) {
+        onSuccess({
           ...professionalData,
           id: professional?.id || professionalData.id
         });
@@ -240,6 +235,9 @@ export default function ProfessionalFormModal({
             <DialogTitle>
               {professional ? 'Editar Profissional' : 'Novo Profissional'}
             </DialogTitle>
+            <DialogDescription>
+              Preencha os dados do profissional e clique em salvar.
+            </DialogDescription>
           </DialogHeader>
           
           <form onSubmit={handleSubmit} className="space-y-4 py-4">
@@ -350,9 +348,6 @@ export default function ProfessionalFormModal({
         open={isReviewOpen} 
         onOpenChange={(open) => {
           setIsReviewOpen(open);
-          if (!open && !isOpen) {
-            handleCloseDialog();
-          }
         }}
       >
         <AlertDialogContent>
