@@ -1,5 +1,6 @@
+
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useHealth } from '@/context/HealthContext';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -15,9 +16,13 @@ import { maskDateInput, maskTimeInput, getFormattedDateWithDay, isValidDateForma
 import { validateDate, validateTime, checkEventOverlaps } from '@/utils/validationUtils';
 import ProfessionalFormModal from '../professionals/ProfessionalFormModal';
 
-export default function EventForm() {
-  const { id } = useParams();
-  const isEditMode = !!id;
+interface EventFormProps {
+  isEditMode: boolean;
+  initialData: Partial<Event>;
+  professionalName: string;
+}
+
+export default function EventForm({ isEditMode, initialData, professionalName }: EventFormProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { 
@@ -25,55 +30,20 @@ export default function EventForm() {
     professionals, 
     holidays, 
     addEvent, 
-    updateEvent, 
-    getEventById 
+    updateEvent 
   } = useHealth();
 
   const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false);
   const [isProfessionalModalOpen, setIsProfessionalModalOpen] = useState(false);
   const [isAddProfessionalModalOpen, setIsAddProfessionalModalOpen] = useState(false);
-  const [formState, setFormState] = useState<Partial<Event>>({
-    type: 'Consulta' as EventType,
-    eventDate: new Date().toLocaleDateString('pt-BR'),
-    startTime: '',
-    endTime: '',
-    professionalId: 0,
-    professionalName: '',
-    specialtyName: '',
-    locationName: '',
-    observation: '',
-    isFirstConsultation: false,
-    preparation: '',
-    files: []
-  });
+  const [formState, setFormState] = useState<Partial<Event>>(initialData);
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [formWarnings, setFormWarnings] = useState<Record<string, string>>({});
-  const [eventLoaded, setEventLoaded] = useState(false);
 
-  // Load event data if in edit mode
   useEffect(() => {
-    if (isEditMode && id && !eventLoaded) {
-      const eventId = parseInt(id, 10);
-      const event = getEventById(eventId);
-      
-      if (event) {
-        console.log("Loading event for editing:", event);
-        setFormState({
-          ...event,
-          id: eventId
-        });
-        setEventLoaded(true);
-      } else {
-        toast({
-          title: "Evento não encontrado",
-          description: "O evento que você está tentando editar não existe.",
-          variant: "destructive",
-        });
-        navigate('/');
-      }
-    }
-  }, [isEditMode, id, getEventById, navigate, toast, eventLoaded]);
+    setFormState(initialData);
+  }, [initialData]);
 
   // Validate date whenever it changes
   useEffect(() => {
@@ -149,7 +119,7 @@ export default function EventForm() {
     ) {
       // Don't check overlaps for events that are being edited
       const currentEvents = events.filter(e => 
-        !e.isDeleted && (isEditMode ? e.id !== parseInt(id!, 10) : true)
+        !e.isDeleted && (isEditMode ? e.id !== formState.id : true)
       );
       
       const overlapCheck = checkEventOverlaps(formState, currentEvents);
@@ -172,9 +142,9 @@ export default function EventForm() {
     formState.endTime, 
     formState.type,
     formState.locationName,
+    formState.id,
     events,
-    isEditMode,
-    id
+    isEditMode
   ]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -304,13 +274,9 @@ export default function EventForm() {
   const handleConfirmSubmit = () => {
     // Create or update the event
     try {
-      if (isEditMode && id) {
+      if (isEditMode) {
         // Make sure to preserve the original ID when updating
-        const eventIdNum = parseInt(id, 10);
-        updateEvent({
-          ...formState as Event,
-          id: eventIdNum,
-        });
+        updateEvent(formState as Event);
         
         toast({
           title: "Evento atualizado",
@@ -376,13 +342,6 @@ export default function EventForm() {
     return true;
   };
 
-  // For debugging in development
-  useEffect(() => {
-    if (isEditMode && eventLoaded) {
-      console.log("Form state after loading event:", formState);
-    }
-  }, [formState, isEditMode, eventLoaded]);
-
   return (
     <>
       <Card className="w-full max-w-2xl mx-auto">
@@ -393,7 +352,12 @@ export default function EventForm() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Type of Event */}
             <div className="space-y-2">
-              <Label htmlFor="type">Tipo de Evento *</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="type">Tipo de Evento</Label>
+                <span className="text-sm text-red-500">
+                  {!formState.type && 'Campo obrigatório'}
+                </span>
+              </div>
               <Select
                 value={formState.type}
                 onValueChange={(value) => handleSelectChange('type', value)}
@@ -449,37 +413,43 @@ export default function EventForm() {
             {/* Professional */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="professionalId">Profissional *</Label>
+                <Label htmlFor="professionalId">Profissional</Label>
+                <span className="text-sm text-red-500">
+                  {!formState.professionalId && 'Campo obrigatório'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <Select
+                  value={formState.professionalId ? formState.professionalId.toString() : ''}
+                  onValueChange={(value) => handleSelectChange('professionalId', value)}
+                >
+                  <SelectTrigger id="professionalId" className={`flex-1 ${formErrors.professionalId ? 'border-red-500' : ''}`}>
+                    <SelectValue placeholder="Selecione o profissional" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {professionals
+                      .filter(p => !p.isDeleted)
+                      .map(professional => (
+                        <SelectItem 
+                          key={professional.id} 
+                          value={professional.id.toString()}
+                        >
+                          {professional.name} - {professional.specialtyName}
+                        </SelectItem>
+                      ))
+                    }
+                  </SelectContent>
+                </Select>
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   onClick={() => setIsProfessionalModalOpen(true)}
+                  className="ml-2"
                 >
                   Novo
                 </Button>
               </div>
-              <Select
-                value={formState.professionalId ? formState.professionalId.toString() : ''}
-                onValueChange={(value) => handleSelectChange('professionalId', value)}
-              >
-                <SelectTrigger id="professionalId" className={formErrors.professionalId ? 'border-red-500' : ''}>
-                  <SelectValue placeholder="Selecione o profissional" />
-                </SelectTrigger>
-                <SelectContent>
-                  {professionals
-                    .filter(p => !p.isDeleted)
-                    .map(professional => (
-                      <SelectItem 
-                        key={professional.id} 
-                        value={professional.id.toString()}
-                      >
-                        {professional.name} - {professional.specialtyName}
-                      </SelectItem>
-                    ))
-                  }
-                </SelectContent>
-              </Select>
               {formErrors.professionalId && (
                 <p className="text-sm text-red-500 mt-1">{formErrors.professionalId}</p>
               )}
@@ -487,7 +457,12 @@ export default function EventForm() {
             
             {/* Date */}
             <div className="space-y-2">
-              <Label htmlFor="eventDate">Data do Evento *</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="eventDate">Data do Evento</Label>
+                <span className="text-sm text-red-500">
+                  {!formState.eventDate && 'Campo obrigatório'}
+                </span>
+              </div>
               <Input
                 id="eventDate"
                 name="eventDate"
@@ -512,7 +487,12 @@ export default function EventForm() {
             {/* Time */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="startTime">Hora de Início *</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="startTime">Hora de Início</Label>
+                  <span className="text-sm text-red-500">
+                    {!formState.startTime && 'Campo obrigatório'}
+                  </span>
+                </div>
                 <Input
                   id="startTime"
                   name="startTime"
@@ -526,9 +506,15 @@ export default function EventForm() {
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="endTime">
-                  Hora de Fim {formState.type !== 'Prescrição' ? '*' : ''}
-                </Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="endTime">
+                    Hora de Fim {formState.type !== 'Prescrição' && (
+                      <span className="text-sm text-red-500">
+                        {!formState.endTime && 'Campo obrigatório'}
+                      </span>
+                    )}
+                  </Label>
+                </div>
                 <Input
                   id="endTime"
                   name="endTime"

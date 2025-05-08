@@ -1,5 +1,6 @@
+
 import { useState } from 'react';
-import { Edit, Trash2, File, CheckCircle, Check, X } from 'lucide-react';
+import { Edit, Trash2, File, CheckCircle, Check, X, Eye, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Event } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -8,6 +9,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useToast } from '@/hooks/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
 import FileManagementModal from '../files/FileManagementModal';
+import EventDetailsModal from './EventDetailsModal';
 
 interface EventCardProps {
   event: Event;
@@ -23,6 +25,7 @@ export default function EventCard({ event, position, onClick }: EventCardProps) 
   const [deleteFiles, setDeleteFiles] = useState(false);
   const [isFileManagementOpen, setIsFileManagementOpen] = useState(false);
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 
   // Determine background color based on event status
   const getCardStyles = () => {
@@ -71,6 +74,11 @@ export default function EventCard({ event, position, onClick }: EventCardProps) 
     setIsConfirmationOpen(true);
   };
 
+  const handleDetailsClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsDetailsModalOpen(true);
+  };
+
   const handleConfirmYes = () => {
     confirmEvent(event.id, true);
     toast({
@@ -104,7 +112,7 @@ export default function EventCard({ event, position, onClick }: EventCardProps) 
     setIsFileManagementOpen(true);
   };
 
-  // Check if event can be confirmed (sessions and prescriptions only, within time window)
+  // Check if event can be confirmed (sessions and prescriptions only, now enabled from start time)
   const canConfirm = () => {
     // Already confirmed events can't be confirmed again
     if (event.isConfirmed !== undefined) return false;
@@ -115,14 +123,17 @@ export default function EventCard({ event, position, onClick }: EventCardProps) 
     // Need confirmation deadline to be set
     if (!event.confirmationDeadline) return false;
     
-    // Can confirm if now is between start time and confirmation deadline
+    // Can confirm if now is on or after start time and before confirmation deadline
     const now = new Date();
     const deadline = new Date(event.confirmationDeadline);
     
-    // Must be past or ongoing event to be confirmable
-    if (event.status !== 'past' && event.status !== 'ongoing') return false;
+    // Parse event start time
+    const [day, month, year] = event.eventDate.split('/').map(Number);
+    const [hours, minutes] = event.startTime.split(':').map(Number);
+    const eventStartTime = new Date(year, month - 1, day, hours, minutes);
     
-    return now <= deadline;
+    // Can confirm if current time is at or after event start time and before deadline
+    return now >= eventStartTime && now <= deadline;
   };
 
   // Format times for display
@@ -150,7 +161,17 @@ export default function EventCard({ event, position, onClick }: EventCardProps) 
           <p className="text-sm text-gray-600">{getTimeDisplay()}</p>
         </div>
         
-        <div className="flex justify-end space-x-2 mt-3">
+        <div className="flex flex-wrap justify-end gap-2 mt-3">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleDetailsClick}
+            className="text-xs"
+          >
+            <Eye className="h-3.5 w-3.5 mr-1" />
+            Visualizar
+          </Button>
+
           <Button 
             variant="outline" 
             size="sm" 
@@ -170,6 +191,16 @@ export default function EventCard({ event, position, onClick }: EventCardProps) 
           >
             <Edit className="h-3.5 w-3.5 mr-1" />
             Editar
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            size="sm" 
+            disabled={true}
+            className="text-xs"
+          >
+            <MapPin className="h-3.5 w-3.5 mr-1" />
+            Rotas
           </Button>
           
           <Button 
@@ -265,6 +296,13 @@ export default function EventCard({ event, position, onClick }: EventCardProps) 
         event={event}
         isOpen={isFileManagementOpen}
         onClose={() => setIsFileManagementOpen(false)}
+      />
+
+      {/* Event details modal */}
+      <EventDetailsModal
+        event={event}
+        isOpen={isDetailsModalOpen}
+        onClose={() => setIsDetailsModalOpen(false)}
       />
     </>
   );

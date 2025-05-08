@@ -3,15 +3,20 @@ import { useState } from 'react';
 import { useHealth } from '@/context/HealthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { File, Eye } from 'lucide-react';
+import { File, Eye, Trash2 } from 'lucide-react';
 import { FileType } from '@/types';
 import { formatDateHeader } from '@/utils/dateUtils';
 import FileManagementModal from './FileManagementModal';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { useToast } from '@/hooks/use-toast';
 
 export default function FileRepository() {
-  const { events, holidays } = useHealth();
+  const { events, holidays, removeAllFilesFromEvent } = useHealth();
   const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
   const [isFileManagementOpen, setIsFileManagementOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [eventToDeleteFiles, setEventToDeleteFiles] = useState<number | null>(null);
+  const { toast } = useToast();
   
   // Get events with files
   const eventsWithFiles = events.filter(event => 
@@ -28,6 +33,23 @@ export default function FileRepository() {
   const handleManageFiles = (eventId: number) => {
     setSelectedEventId(eventId);
     setIsFileManagementOpen(true);
+  };
+
+  const handleDeleteFilesClick = (eventId: number) => {
+    setEventToDeleteFiles(eventId);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDeleteFiles = () => {
+    if (eventToDeleteFiles) {
+      removeAllFilesFromEvent(eventToDeleteFiles);
+      toast({
+        title: "Arquivos excluídos",
+        description: "Todos os arquivos deste evento foram excluídos com sucesso.",
+      });
+      setIsDeleteDialogOpen(false);
+      setEventToDeleteFiles(null);
+    }
   };
   
   return (
@@ -53,11 +75,22 @@ export default function FileRepository() {
                     <span>
                       {event.type} - {event.professionalName}
                     </span>
-                    {event.isDeleted && (
-                      <span className="text-sm text-red-500 font-normal">
-                        Evento deletado em {new Date(event.deletedAt!).toLocaleDateString('pt-BR')}
-                      </span>
-                    )}
+                    <div className="flex space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDeleteFilesClick(event.id)}
+                        className="text-red-500 hover:text-red-700 text-xs"
+                      >
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        Excluir Arquivos
+                      </Button>
+                      {event.isDeleted && (
+                        <span className="text-sm text-red-500 font-normal">
+                          Evento deletado em {new Date(event.deletedAt!).toLocaleDateString('pt-BR')}
+                        </span>
+                      )}
+                    </div>
                   </CardTitle>
                   <p className="text-sm text-gray-500">
                     {formatDateHeader(event.eventDate, holidays)}
@@ -106,6 +139,22 @@ export default function FileRepository() {
           }}
         />
       )}
+
+      {/* Delete files confirmation */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão de arquivos</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir todos os arquivos deste evento? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDeleteFiles}>Confirmar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

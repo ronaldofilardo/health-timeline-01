@@ -25,6 +25,7 @@ interface HealthContextType {
   getEventStatus: (event: Event) => EventStatus;
   addFileToEvent: (eventId: number, fileType: FileType, path: string) => void;
   removeFileFromEvent: (eventId: number, fileId: number) => void;
+  removeAllFilesFromEvent: (eventId: number) => void;
   exportData: () => string;
   importData: (jsonData: string) => { success: boolean; message: string };
 }
@@ -307,6 +308,21 @@ export function HealthProvider({ children }: { children: ReactNode }) {
     setEvents(updatedEvents);
   };
 
+  // Remove all files from an event
+  const removeAllFilesFromEvent = (eventId: number) => {
+    const updatedEvents = events.map(event => {
+      if (event.id === eventId) {
+        return {
+          ...event,
+          files: event.files.map(file => ({ ...file, isDeleted: true }))
+        };
+      }
+      return event;
+    });
+    
+    setEvents(updatedEvents);
+  };
+
   // Export data to JSON
   const exportData = () => {
     const dataToExport = {
@@ -474,6 +490,7 @@ export function HealthProvider({ children }: { children: ReactNode }) {
       getEventStatus,
       addFileToEvent,
       removeFileFromEvent,
+      removeAllFilesFromEvent,
       exportData,
       importData
     }}>

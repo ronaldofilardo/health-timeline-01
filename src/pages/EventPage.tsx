@@ -53,7 +53,7 @@ const EventPage = () => {
     <AppLayout title={isEditMode ? 'Editar Evento' : 'Novo Evento'}>
       <div className="container mx-auto px-4 py-8">
         <EventForm 
-          isEdit={isEditMode} 
+          isEditMode={isEditMode} 
           initialData={formData}
           professionalName={professionalName}
         />
