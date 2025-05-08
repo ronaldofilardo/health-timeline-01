@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useHealth } from '@/context/HealthContext';
 import { Professional } from '@/types';
@@ -346,9 +345,7 @@ export default function ProfessionalFormModal({
       
       <AlertDialog 
         open={isReviewOpen} 
-        onOpenChange={(open) => {
-          setIsReviewOpen(open);
-        }}
+        onOpenChange={setIsReviewOpen}
       >
         <AlertDialogContent>
           <AlertDialogHeader>

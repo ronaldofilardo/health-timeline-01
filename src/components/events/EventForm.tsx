@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useHealth } from '@/context/HealthContext';
@@ -32,6 +31,7 @@ export default function EventForm() {
 
   const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false);
   const [isProfessionalModalOpen, setIsProfessionalModalOpen] = useState(false);
+  const [isAddProfessionalModalOpen, setIsAddProfessionalModalOpen] = useState(false);
   const [formState, setFormState] = useState<Partial<Event>>({
     type: 'Consulta' as EventType,
     eventDate: new Date().toLocaleDateString('pt-BR'),
@@ -348,6 +348,17 @@ export default function EventForm() {
     setIsProfessionalModalOpen(false);
   };
 
+  const handleNewProfessionalAdded = (newProfessional: Professional) => {
+    setFormState(prev => ({
+      ...prev,
+      professionalId: newProfessional.id,
+      professionalName: newProfessional.name,
+      specialtyName: newProfessional.specialtyName,
+      locationName: newProfessional.locationName
+    }));
+    setIsAddProfessionalModalOpen(false);
+  };
+
   const isFormValid = () => {
     // Check if we have any errors
     if (Object.keys(formErrors).length > 0) return false;
@@ -638,7 +649,14 @@ export default function EventForm() {
       <ProfessionalFormModal
         isOpen={isProfessionalModalOpen}
         onClose={() => setIsProfessionalModalOpen(false)}
-        onProfessionalAdded={handleProfessionalAdded}
+        onSuccess={(newProfessional: Professional) => handleProfessionalAdded(newProfessional)}
+      />
+      
+      {/* Add Professional Form Modal */}
+      <ProfessionalFormModal
+        isOpen={isAddProfessionalModalOpen}
+        onClose={() => setIsAddProfessionalModalOpen(false)}
+        onSuccess={(newProfessional: Professional) => handleNewProfessionalAdded(newProfessional)}
       />
     </>
   );

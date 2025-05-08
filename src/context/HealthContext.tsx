@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Event, Professional, Specialty, Location, Holiday, EventType, FileType, EventStatus } from '@/types';
 import { format, addHours, parseISO, isToday, isPast, isFuture } from 'date-fns';

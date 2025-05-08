@@ -1,29 +1,30 @@
 
-import { useNavigate, useParams } from 'react-router-dom';
-import { AppLayout } from '@/components/layout/AppLayout';
-import EventForm from '@/components/events/EventForm';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
-
-export default function EventPage() {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const isEditMode = !!id;
+  // Update the EventPage component to correctly load event data when editing
   
-  return (
-    <AppLayout title={isEditMode ? "Editar Evento" : "Criar Evento"}>
-      <div className="mb-6">
-        <Button 
-          variant="ghost" 
-          className="flex items-center"
-          onClick={() => navigate('/')}
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Voltar para a Timeline
-        </Button>
-      </div>
-      
-      <EventForm />
-    </AppLayout>
-  );
-}
+  // Inside the useEffect that fetches event data for editing:
+  useEffect(() => {
+    // Only attempt to load event data if we're in edit mode and have an eventId
+    if (isEditMode && eventId) {
+      const eventToEdit = getEventById(parseInt(eventId));
+      if (eventToEdit) {
+        // Set form data with the exact values from the event
+        setFormData({
+          type: eventToEdit.type,
+          professionalId: eventToEdit.professionalId,
+          eventDate: eventToEdit.eventDate,
+          startTime: eventToEdit.startTime,
+          endTime: eventToEdit.endTime || '',
+          notes: eventToEdit.notes || '',
+          recurring: eventToEdit.recurring || false,
+          recurrencePattern: eventToEdit.recurrencePattern || 'weekly',
+          recurrenceEndDate: eventToEdit.recurrenceEndDate || '',
+          files: eventToEdit.files || []
+        });
+        
+        // Update related state
+        setProfessionalName(eventToEdit.professionalName || '');
+      } else {
+        navigate('/');
+      }
+    }
+  }, [isEditMode, eventId, getEventById, navigate]);
