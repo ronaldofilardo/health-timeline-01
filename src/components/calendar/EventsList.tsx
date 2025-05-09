@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { FileDown } from 'lucide-react';
 import { Event } from '@/types';
 import CalendarFilter from '@/components/calendar/CalendarFilter';
-import { exportCalendarToPDF } from '@/utils/pdfExport';
 
 interface EventsListProps {
   selectedDate: Date | undefined;
