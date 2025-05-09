@@ -43,18 +43,34 @@ export const getFormattedDateWithDay = (dateString: string): string => {
   return format(date, "dd/MM/yyyy - EEEE", { locale: ptBR });
 };
 
+// Feriados nacionais fixos
+export const FIXED_HOLIDAYS: Holiday[] = [
+  { id: 1, date: '2025-01-01', name: 'Confraternização Universal', isRecurring: true },
+  { id: 2, date: '2025-04-18', name: 'Sexta-Feira Santa', isRecurring: false },
+  { id: 3, date: '2025-04-21', name: 'Tiradentes', isRecurring: true },
+  { id: 4, date: '2025-05-01', name: 'Dia do Trabalho', isRecurring: true },
+  { id: 5, date: '2025-09-07', name: 'Independência do Brasil', isRecurring: true },
+  { id: 6, date: '2025-10-12', name: 'Dia das Crianças', isRecurring: true },
+  { id: 7, date: '2025-11-02', name: 'Finados', isRecurring: true },
+  { id: 8, date: '2025-11-15', name: 'Proclamação da República', isRecurring: true },
+  { id: 9, date: '2025-12-25', name: 'Natal', isRecurring: true }
+];
+
 // Check if a date is a holiday
 export const isHoliday = (date: Date, holidays: Holiday[]): Holiday | null => {
   // Convert date to YYYY-MM-DD for comparison
   const dateStr = format(date, 'yyyy-MM-dd');
   
+  // Combine fixed holidays with provided holidays
+  const allHolidays = [...FIXED_HOLIDAYS, ...holidays];
+  
   // Check for exact match (recurring and non-recurring)
-  const exactMatch = holidays.find(holiday => holiday.date === dateStr);
+  const exactMatch = allHolidays.find(holiday => holiday.date === dateStr);
   if (exactMatch) return exactMatch;
   
   // Check for recurring holidays (match month and day)
   const monthDay = format(date, 'MM-dd');
-  const recurringMatch = holidays.find(holiday => {
+  const recurringMatch = allHolidays.find(holiday => {
     if (!holiday.isRecurring) return false;
     const holidayMonthDay = holiday.date.substring(5); // Get MM-DD part
     return holidayMonthDay === monthDay;
@@ -87,11 +103,16 @@ export const formatDateHeader = (dateString: string, holidays: Holiday[]): strin
   const formattedDate = format(date, 'dd/MM/yyyy');
   
   const holiday = isHoliday(date, holidays);
-  const holidayInfo = holiday ? ` (FERIADO - ${holiday.name})` : '';
+  const holidayInfo = holiday ? ` - <span class="text-red-500 font-medium">FERIADO - ${holiday.name}</span>` : '';
   
   const isCurrentDay = isToday(date) ? ' (HOJE)' : '';
   
-  return `${formattedDate} - ${dayOfWeek}${holidayInfo}${isCurrentDay}`;
+  return `${formattedDate} - ${dayName(dayOfWeek)}${holidayInfo}${isCurrentDay}`;
+};
+
+// Helper to capitalize day name
+const dayName = (day: string): string => {
+  return day.charAt(0).toUpperCase() + day.slice(1);
 };
 
 // Check if time is within business hours

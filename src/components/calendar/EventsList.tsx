@@ -6,15 +6,17 @@ import { Button } from '@/components/ui/button';
 import { FileDown } from 'lucide-react';
 import { Event } from '@/types';
 import CalendarFilter from '@/components/calendar/CalendarFilter';
+import { exportCalendarToPDF } from '@/utils/pdfExport';
 
 interface EventsListProps {
   selectedDate: Date | undefined;
   filteredEvents: Event[];
   onExportPDF: () => Promise<void>;
+  filterType: 'day' | 'week' | 'month';
 }
 
 export const EventsList = forwardRef<HTMLDivElement, EventsListProps>(
-  ({ selectedDate, filteredEvents, onExportPDF }, ref) => {
+  ({ selectedDate, filteredEvents, onExportPDF, filterType }, ref) => {
     return (
       <div className="bg-white p-4 rounded-lg shadow">
         <div className="flex justify-between mb-4">

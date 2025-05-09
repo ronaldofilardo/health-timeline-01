@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { File, Eye, Trash2 } from 'lucide-react';
 import { FileType } from '@/types';
-import { formatDateHeader } from '@/utils/dateUtils';
+import { formatDateHeader, parseDate } from '@/utils/dateUtils';
 import FileManagementModal from './FileManagementModal';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -23,11 +23,13 @@ export default function FileRepository() {
     event.files.some(file => !file.isDeleted)
   );
   
-  // Sort events by date
+  // Sort events by date (newest first)
   const sortedEvents = [...eventsWithFiles].sort((a, b) => {
     const [dayA, monthA, yearA] = a.eventDate.split('/').map(Number);
     const [dayB, monthB, yearB] = b.eventDate.split('/').map(Number);
-    return new Date(yearA, monthA - 1, dayA).getTime() - new Date(yearB, monthB - 1, dayB).getTime();
+    const dateA = new Date(yearA, monthA - 1, dayA);
+    const dateB = new Date(yearB, monthB - 1, dayB);
+    return dateB.getTime() - dateA.getTime(); // Descending order (newest first)
   });
   
   const handleManageFiles = (eventId: number) => {
@@ -92,9 +94,7 @@ export default function FileRepository() {
                       )}
                     </div>
                   </CardTitle>
-                  <p className="text-sm text-gray-500">
-                    {formatDateHeader(event.eventDate, holidays)}
-                  </p>
+                  <div className="text-sm text-gray-500" dangerouslySetInnerHTML={{ __html: formatDateHeader(event.eventDate, holidays) }} />
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mt-2">

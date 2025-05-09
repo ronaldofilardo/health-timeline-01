@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Edit, Trash2, File, CheckCircle, Check, X, Eye, MapPin } from 'lucide-react';
+import { Edit, Trash2, File, FileCheck, CheckCircle, Check, X, Eye, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Event } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -27,6 +27,9 @@ export default function EventCard({ event, position, onClick }: EventCardProps) 
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 
+  // Verificar se o evento tem arquivos não excluídos
+  const hasFiles = event.files.some(file => !file.isDeleted);
+  
   // Determine background color based on event status
   const getCardStyles = () => {
     switch (event.status) {
@@ -173,13 +176,17 @@ export default function EventCard({ event, position, onClick }: EventCardProps) 
           </Button>
 
           <Button 
-            variant="outline" 
+            variant={hasFiles ? "default" : "outline"} 
             size="sm" 
             onClick={handleFilesClick}
-            className="text-xs"
+            className={`text-xs ${hasFiles ? "bg-health-secondary" : ""}`}
           >
-            <File className="h-3.5 w-3.5 mr-1" />
-            Arquivos
+            {hasFiles ? (
+              <FileCheck className="h-3.5 w-3.5 mr-1" />
+            ) : (
+              <File className="h-3.5 w-3.5 mr-1" />
+            )}
+            Arquivos {hasFiles ? `(${event.files.filter(f => !f.isDeleted).length})` : ''}
           </Button>
           
           <Button 

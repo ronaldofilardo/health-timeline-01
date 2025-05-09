@@ -6,6 +6,8 @@ import { ptBR } from 'date-fns/locale';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { FileText } from 'lucide-react';
+import { useHealth } from '@/context/HealthContext';
+import { isHoliday } from '@/utils/dateUtils';
 
 export interface CalendarFilterProps {
   events: Event[];
@@ -13,6 +15,8 @@ export interface CalendarFilterProps {
 }
 
 export const CalendarFilter: React.FC<CalendarFilterProps> = ({ events }) => {
+  const { holidays } = useHealth();
+  
   // Agrupar eventos por data
   const eventsByDate = events.reduce<Record<string, Event[]>>((acc, event) => {
     if (!acc[event.eventDate]) {
@@ -46,6 +50,18 @@ export const CalendarFilter: React.FC<CalendarFilterProps> = ({ events }) => {
         return 'bg-gray-100 text-gray-700';
     }
   };
+  
+  // Check for holiday
+  const checkHoliday = (dateStr: string) => {
+    const [day, month, year] = dateStr.split('/').map(Number);
+    const date = new Date(year, month - 1, day);
+    const holiday = isHoliday(date, holidays);
+    
+    if (holiday) {
+      return <span className="text-red-500 font-medium"> - Feriado - {holiday.name}</span>;
+    }
+    return null;
+  };
 
   return (
     <div className="space-y-4 mb-4">
@@ -56,6 +72,7 @@ export const CalendarFilter: React.FC<CalendarFilterProps> = ({ events }) => {
           <div key={date} className="mb-4">
             <h3 className="text-md font-medium text-gray-700 mb-2">
               {format(parse(date, 'dd/MM/yyyy', new Date()), 'EEEE, dd/MM/yyyy', { locale: ptBR })}
+              {checkHoliday(date)}
             </h3>
             <div className="space-y-2">
               {eventsByDate[date].map((event) => (
