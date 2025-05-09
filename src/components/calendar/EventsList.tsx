@@ -17,8 +17,8 @@ interface EventsListProps {
 export const EventsList = forwardRef<HTMLDivElement, EventsListProps>(
   ({ selectedDate, filteredEvents, onExportPDF, filterType }, ref) => {
     return (
-      <div className="bg-white p-4 rounded-lg shadow">
-        <div className="flex justify-between mb-4">
+      <div className="bg-white p-4 rounded-lg shadow" ref={ref}>
+        <div className="flex flex-col sm:flex-row justify-between mb-4 gap-2">
           <h2 className="text-xl font-medium">
             Eventos
             {selectedDate && ` - ${format(selectedDate, 'MMMM yyyy', { locale: ptBR })}`}
@@ -28,6 +28,7 @@ export const EventsList = forwardRef<HTMLDivElement, EventsListProps>(
             variant="outline"
             onClick={onExportPDF}
             disabled={filteredEvents.length === 0}
+            className="w-full sm:w-auto"
           >
             <FileDown className="h-4 w-4 mr-2" />
             Exportar PDF

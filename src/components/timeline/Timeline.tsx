@@ -10,6 +10,7 @@ import EventDetailsModal from './EventDetailsModal';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export default function Timeline() {
   const { events, holidays } = useHealth();
@@ -17,6 +18,7 @@ export default function Timeline() {
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [groupedEvents, setGroupedEvents] = useState<Record<string, Event[]>>({});
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     // Group events by date
@@ -75,7 +77,7 @@ export default function Timeline() {
         </Button>
       </div>
       
-      <div className="timeline-line"></div>
+      <div className={`timeline-line ${isMobile ? 'hidden' : ''}`}></div>
       
       {sortedDates.length === 0 ? (
         <div className="text-center py-12">
@@ -91,20 +93,23 @@ export default function Timeline() {
               {formatDateHeader(date, holidays)}
             </div>
             
-            {groupedEvents[date].map((event, eventIndex) => {
-              // Alternate between left and right for events on different days
-              // Keep events on the same day on the same side
-              const isLeft = dateIndex % 2 === 0;
-              
-              return (
-                <EventCard
-                  key={event.id}
-                  event={event}
-                  position={isLeft ? 'left' : 'right'}
-                  onClick={() => handleEventClick(event)}
-                />
-              );
-            })}
+            <div className={`events-container ${isMobile ? 'mobile-events' : ''}`}>
+              {groupedEvents[date].map((event, eventIndex) => {
+                // No mobile, todos ficam em uma única coluna
+                // Em desktop, alterna entre esquerda e direita para eventos em dias diferentes
+                // Mantém eventos do mesmo dia no mesmo lado
+                const isLeft = !isMobile && dateIndex % 2 === 0;
+                
+                return (
+                  <EventCard
+                    key={event.id}
+                    event={event}
+                    position={isLeft ? 'left' : 'right'}
+                    onClick={() => handleEventClick(event)}
+                  />
+                );
+              })}
+            </div>
           </div>
         ))
       )}

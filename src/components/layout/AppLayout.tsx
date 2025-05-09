@@ -4,7 +4,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Sheet, SheetContent, SheetTrigger } from '../ui/sheet';
 import { Button } from '../ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { useIsMobile as useMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Menu, X, CalendarDays, Users, FolderArchive, Settings, Download, Upload, PlusCircle } from 'lucide-react';
 
 export interface AppLayoutProps {
@@ -13,7 +13,7 @@ export interface AppLayoutProps {
 }
 
 export function AppLayout({ children, title }: AppLayoutProps) {
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
   const { toast } = useToast();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
@@ -33,8 +33,8 @@ export function AppLayout({ children, title }: AppLayoutProps) {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-14 items-center">
-          <div className="mr-4 flex">
+        <div className="container flex h-14 items-center px-2 sm:px-4">
+          <div className="mr-2 sm:mr-4 flex">
             <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
               <SheetTrigger asChild>
                 <Button 
@@ -80,44 +80,41 @@ export function AppLayout({ children, title }: AppLayoutProps) {
             </Sheet>
             <Link 
               to="/" 
-              className="hidden md:flex items-center gap-2 font-semibold"
+              className="flex items-center gap-2 font-semibold truncate text-sm sm:text-base"
             >
               Health Timeline
             </Link>
           </div>
-          <div className="flex-1 flex items-center justify-between">
-            <nav className="hidden md:flex gap-6 ml-6">
+          <div className="flex-1 flex items-center justify-between overflow-x-auto">
+            <nav className="hidden md:flex gap-3 sm:gap-6 ml-2 sm:ml-6 overflow-x-auto">
               {menuItems.map((item) => (
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center gap-2 text-sm ${
+                  className={`flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap ${
                     location.pathname === item.path
                       ? "text-foreground font-medium"
                       : "text-foreground/60 hover:text-foreground"
                   }`}
                 >
-                  <item.icon className="h-4 w-4" />
+                  <item.icon className="h-3 w-3 sm:h-4 sm:w-4" />
                   {item.label}
                 </Link>
               ))}
             </nav>
-            <div className="ml-auto flex items-center gap-2">
-              {/* Placeholder for user profile or other header items */}
-            </div>
           </div>
         </div>
       </header>
 
       {/* Main content */}
-      <main className="container py-6">
-        <h1 className="text-2xl font-bold mb-6">{title}</h1>
+      <main className="container py-4 sm:py-6 px-2 sm:px-4">
+        <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">{title}</h1>
         {children}
       </main>
 
       {/* Footer */}
-      <footer className="border-t py-4 mt-auto">
-        <div className="container text-center text-sm text-muted-foreground">
+      <footer className="border-t py-3 sm:py-4 mt-auto">
+        <div className="container text-center text-xs sm:text-sm text-muted-foreground">
           &copy; {new Date().getFullYear()} Health Timeline
         </div>
       </footer>

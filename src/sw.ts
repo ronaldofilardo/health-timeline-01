@@ -1,18 +1,17 @@
 
 import { precacheAndRoute } from 'workbox-precaching';
 
-// Necessário para o TypeScript reconhecer a variável self
-declare let self: ServiceWorkerGlobalScope;
+// Para TypeScript reconhecer o self
+declare const self: ServiceWorkerGlobalScope;
 
-// Pré-cacheia os recursos gerados pelo plugin Vite PWA
+// Pré-cacheia recursos
 precacheAndRoute(self.__WB_MANIFEST);
 
-// Adiciona um event listener para instalar o service worker
+// Listeners do service worker
 self.addEventListener('install', () => {
-  self.skipWaiting();
+  void self.skipWaiting();
 });
 
-// Adiciona um event listener para ativar o service worker
 self.addEventListener('activate', (event) => {
   event.waitUntil(self.clients.claim());
 });

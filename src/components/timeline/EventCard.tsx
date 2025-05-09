@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
 import FileManagementModal from '../files/FileManagementModal';
 import EventDetailsModal from './EventDetailsModal';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface EventCardProps {
   event: Event;
@@ -21,6 +22,7 @@ export default function EventCard({ event, position, onClick }: EventCardProps) 
   const navigate = useNavigate();
   const { confirmEvent, deleteEvent } = useHealth();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deleteFiles, setDeleteFiles] = useState(false);
   const [isFileManagementOpen, setIsFileManagementOpen] = useState(false);
@@ -150,7 +152,7 @@ export default function EventCard({ event, position, onClick }: EventCardProps) 
   return (
     <>
       <div 
-        className={`${position === 'left' ? 'timeline-card-left' : 'timeline-card-right'} ${getCardStyles()}`}
+        className={`${isMobile ? 'w-full mb-4' : position === 'left' ? 'timeline-card-left' : 'timeline-card-right'} ${getCardStyles()}`}
         onClick={onClick}
       >
         {event.status === 'ongoing' && (
@@ -160,33 +162,33 @@ export default function EventCard({ event, position, onClick }: EventCardProps) 
         )}
         
         <div className="mb-2">
-          <h3 className="font-medium">{event.type} - {event.professionalName}</h3>
-          <p className="text-sm text-gray-600">{getTimeDisplay()}</p>
+          <h3 className="font-medium text-sm sm:text-base">{event.type} - {event.professionalName}</h3>
+          <p className="text-xs sm:text-sm text-gray-600">{getTimeDisplay()}</p>
         </div>
         
-        <div className="flex flex-wrap justify-end gap-2 mt-3">
+        <div className="flex flex-wrap justify-end gap-1 sm:gap-2 mt-2 sm:mt-3">
           <Button 
             variant="outline" 
             size="sm" 
             onClick={handleDetailsClick}
-            className="text-xs"
+            className="text-[10px] sm:text-xs px-1 sm:px-2 h-7 sm:h-8"
           >
-            <Eye className="h-3.5 w-3.5 mr-1" />
-            Visualizar
+            <Eye className="h-3 w-3 mr-1" />
+            <span className="hidden xs:inline">Visualizar</span>
           </Button>
 
           <Button 
             variant={hasFiles ? "default" : "outline"} 
             size="sm" 
             onClick={handleFilesClick}
-            className={`text-xs ${hasFiles ? "bg-health-secondary" : ""}`}
+            className={`text-[10px] sm:text-xs px-1 sm:px-2 h-7 sm:h-8 ${hasFiles ? "bg-health-secondary" : ""}`}
           >
             {hasFiles ? (
-              <FileCheck className="h-3.5 w-3.5 mr-1" />
+              <FileCheck className="h-3 w-3 mr-1" />
             ) : (
-              <File className="h-3.5 w-3.5 mr-1" />
+              <File className="h-3 w-3 mr-1" />
             )}
-            Arquivos {hasFiles ? `(${event.files.filter(f => !f.isDeleted).length})` : ''}
+            <span className="hidden xs:inline">Arquivos</span> {hasFiles ? `(${event.files.filter(f => !f.isDeleted).length})` : ''}
           </Button>
           
           <Button 
@@ -194,20 +196,20 @@ export default function EventCard({ event, position, onClick }: EventCardProps) 
             size="sm" 
             onClick={handleEditClick}
             disabled={event.status === 'past' || event.status === 'ongoing'}
-            className="text-xs"
+            className="text-[10px] sm:text-xs px-1 sm:px-2 h-7 sm:h-8"
           >
-            <Edit className="h-3.5 w-3.5 mr-1" />
-            Editar
+            <Edit className="h-3 w-3 mr-1" />
+            <span className="hidden xs:inline">Editar</span>
           </Button>
           
           <Button 
             variant="outline" 
             size="sm" 
             disabled={true}
-            className="text-xs"
+            className="text-[10px] sm:text-xs px-1 sm:px-2 h-7 sm:h-8"
           >
-            <MapPin className="h-3.5 w-3.5 mr-1" />
-            Rotas
+            <MapPin className="h-3 w-3 mr-1" />
+            <span className="hidden xs:inline">Rotas</span>
           </Button>
           
           <Button 
@@ -215,10 +217,10 @@ export default function EventCard({ event, position, onClick }: EventCardProps) 
             size="sm" 
             onClick={handleDeleteClick}
             disabled={event.status === 'past' || event.status === 'ongoing'}
-            className="text-xs text-red-500 hover:text-red-700"
+            className="text-[10px] sm:text-xs text-red-500 hover:text-red-700 px-1 sm:px-2 h-7 sm:h-8"
           >
-            <Trash2 className="h-3.5 w-3.5 mr-1" />
-            Deletar
+            <Trash2 className="h-3 w-3 mr-1" />
+            <span className="hidden xs:inline">Deletar</span>
           </Button>
           
           {(event.type === 'Sessões' || event.type === 'Prescrição') && (
@@ -227,17 +229,17 @@ export default function EventCard({ event, position, onClick }: EventCardProps) 
                 variant="outline" 
                 size="sm" 
                 onClick={handleConfirmClick}
-                className="text-xs text-green-600 hover:text-green-800"
+                className="text-[10px] sm:text-xs text-green-600 hover:text-green-800 px-1 sm:px-2 h-7 sm:h-8"
               >
-                <CheckCircle className="h-3.5 w-3.5 mr-1" />
-                Confirmar
+                <CheckCircle className="h-3 w-3 mr-1" />
+                <span className="hidden xs:inline">Confirmar</span>
               </Button>
             ) : (
               <Button 
                 variant="outline" 
                 size="sm" 
                 disabled
-                className="text-xs opacity-50"
+                className="text-[10px] sm:text-xs opacity-50 px-1 sm:px-2 h-7 sm:h-8"
               >
                 {event.isConfirmed === true ? "Confirmado" : event.isConfirmed === false ? "Não Atendido" : "Não Confirmado"}
               </Button>

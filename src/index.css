@@ -126,4 +126,48 @@
     content: '';
     @apply absolute right-0 top-1/2 h-0.5 w-[calc(50%-4rem)] -translate-y-1/2 bg-gray-200;
   }
+  
+  /* Responsivo para dispositivos móveis */
+  @media (max-width: 640px) {
+    .mobile-events .timeline-card-left,
+    .mobile-events .timeline-card-right {
+      @apply ml-0 mr-0 w-full mb-4;
+    }
+    
+    .timeline-date-header::before,
+    .timeline-date-header::after {
+      @apply w-[calc(50%-2rem)];
+    }
+    
+    .timeline-date-header {
+      @apply text-sm;
+    }
+  }
+}
+
+/* Estilo específico para telas pequenas (mobile) */
+@media (max-width: 640px) {
+  .container {
+    @apply px-2;
+  }
+  
+  .events-container {
+    @apply flex flex-col;
+  }
+  
+  .timeline-card-left,
+  .timeline-card-right {
+    @apply w-full ml-0 mr-0;
+  }
+  
+  .timeline-date-header {
+    @apply text-sm;
+  }
+}
+
+/* Ajustes para tablet */
+@media (min-width: 641px) and (max-width: 1023px) {
+  .container {
+    @apply px-4;
+  }
 }

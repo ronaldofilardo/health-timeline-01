@@ -3,16 +3,27 @@ import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
 import { registerSW } from 'virtual:pwa-register'
+import { ToastContainer, toast } from '@/hooks/use-toast'
 
 // Registrar o service worker
-registerSW({
+const updateSW = registerSW({
   onNeedRefresh() {
-    // Opcional: notificar usuário sobre atualização disponível
-    console.log('Nova versão disponível!');
+    // Notificar usuário sobre atualização disponível
+    toast({
+      title: 'Nova versão disponível!',
+      description: 'Clique em atualizar para obter a versão mais recente.',
+      action: {
+        label: 'Atualizar',
+        onClick: () => updateSW()
+      }
+    });
   },
   onOfflineReady() {
-    // Opcional: notificar usuário que o app está pronto para uso offline
-    console.log('Aplicativo pronto para uso offline!');
+    // Notificar usuário que o app está pronto para uso offline
+    toast({
+      title: 'Aplicativo pronto para uso offline!',
+      description: 'O aplicativo pode ser usado mesmo sem conexão com a internet.',
+    });
   },
 })
 
