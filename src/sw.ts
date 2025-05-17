@@ -2,7 +2,7 @@
 import { precacheAndRoute } from 'workbox-precaching';
 
 // Para TypeScript reconhecer o self
-declare const self: ServiceWorkerGlobalScope;
+declare let self: ServiceWorkerGlobalScope;
 
 // Pré-cacheia recursos
 precacheAndRoute(self.__WB_MANIFEST);

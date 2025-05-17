@@ -4,9 +4,13 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import ProfessionalsManagement from '@/components/professionals/ProfessionalsManagement';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
+import { useMemo } from 'react';
 
 export default function ProfessionalsPage() {
   const navigate = useNavigate();
+  
+  // Usar useMemo para evitar renderizações desnecessárias do componente
+  const professionalManagement = useMemo(() => <ProfessionalsManagement />, []);
   
   return (
     <AppLayout title="Gerenciar Profissionais">
@@ -21,7 +25,7 @@ export default function ProfessionalsPage() {
         </Button>
       </div>
       
-      <ProfessionalsManagement />
+      {professionalManagement}
     </AppLayout>
   );
 }

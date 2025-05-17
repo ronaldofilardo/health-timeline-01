@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+
+import { useState, useEffect, useCallback } from 'react';
 import { useHealth } from '@/context/HealthContext';
 import { Professional } from '@/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -36,6 +37,8 @@ export default function ProfessionalFormModal({
     newLocation: ''
   });
   
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  
   // Reset form data when modal opens or professional changes
   useEffect(() => {
     if (isOpen) {
@@ -52,9 +55,7 @@ export default function ProfessionalFormModal({
     }
   }, [isOpen, professional]);
   
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  
-  const validateForm = () => {
+  const validateForm = useCallback(() => {
     const newErrors: Record<string, string> = {};
     
     if (!formData.name) {
@@ -71,9 +72,9 @@ export default function ProfessionalFormModal({
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
+  }, [formData]);
   
-  const handleChange = (field: string, value: string) => {
+  const handleChange = useCallback((field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     
     // Clear errors when field is filled
@@ -84,9 +85,9 @@ export default function ProfessionalFormModal({
         return newErrors;
       });
     }
-  };
+  }, [errors]);
   
-  const handleSpecialtySelect = (value: string) => {
+  const handleSpecialtySelect = useCallback((value: string) => {
     if (value === 'new') {
       setFormData(prev => ({ 
         ...prev, 
@@ -107,15 +108,16 @@ export default function ProfessionalFormModal({
     }
     
     // Clear specialty error if it exists
-    if (errors.specialty) {
-      setErrors(prev => {
+    setErrors(prev => {
+      if (prev.specialty) {
         const { specialty, ...rest } = prev;
         return rest;
-      });
-    }
-  };
+      }
+      return prev;
+    });
+  }, [specialties]);
   
-  const handleLocationSelect = (value: string) => {
+  const handleLocationSelect = useCallback((value: string) => {
     if (value === 'new') {
       setFormData(prev => ({ 
         ...prev, 
@@ -136,15 +138,16 @@ export default function ProfessionalFormModal({
     }
     
     // Clear location error if it exists
-    if (errors.location) {
-      setErrors(prev => {
+    setErrors(prev => {
+      if (prev.location) {
         const { location, ...rest } = prev;
         return rest;
-      });
-    }
-  };
+      }
+      return prev;
+    });
+  }, [locations]);
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     
     if (!validateForm()) {
@@ -178,9 +181,9 @@ export default function ProfessionalFormModal({
     }));
     
     setIsReviewOpen(true);
-  };
+  }, [formData, validateForm, addSpecialty, addLocation]);
   
-  const handleConfirm = () => {
+  const handleConfirm = useCallback(() => {
     try {
       const professionalData = {
         id: professional?.id || 0,
@@ -209,7 +212,12 @@ export default function ProfessionalFormModal({
       }
       
       setIsReviewOpen(false);
-      onClose();
+      
+      // Importante: Fechar o modal com um pequeno atraso para evitar problemas de renderização
+      setTimeout(() => {
+        onClose();
+      }, 100);
+      
     } catch (error) {
       console.error("Error saving professional:", error);
       toast({
@@ -218,14 +226,15 @@ export default function ProfessionalFormModal({
         variant: "destructive",
       });
     }
-  };
+  }, [professional, formData, updateProfessional, addProfessional, onSuccess, onClose, toast]);
   
-  const handleCloseDialog = () => {
+  const handleCloseDialog = useCallback(() => {
     onClose();
     // Reset errors when dialog closes
     setErrors({});
-  };
+  }, [onClose]);
   
+  // Renderização do formulário
   return (
     <>
       <Dialog open={isOpen} onOpenChange={handleCloseDialog}>
@@ -239,7 +248,9 @@ export default function ProfessionalFormModal({
             </DialogDescription>
           </DialogHeader>
           
+          {/* Form content */}
           <form onSubmit={handleSubmit} className="space-y-4 py-4">
+            {/* Nome */}
             <div className="space-y-2">
               <Label htmlFor="name">Nome *</Label>
               <Input
@@ -253,6 +264,7 @@ export default function ProfessionalFormModal({
               )}
             </div>
             
+            {/* Especialidade */}
             <div className="space-y-2">
               <Label htmlFor="specialty">Especialidade *</Label>
               <Select
@@ -292,6 +304,7 @@ export default function ProfessionalFormModal({
               )}
             </div>
             
+            {/* Local */}
             <div className="space-y-2">
               <Label htmlFor="location">Local de Atendimento *</Label>
               <Select
@@ -331,6 +344,7 @@ export default function ProfessionalFormModal({
               )}
             </div>
             
+            {/* Botões */}
             <div className="pt-4 flex justify-end space-x-2">
               <Button type="button" variant="outline" onClick={handleCloseDialog}>
                 Cancelar
@@ -343,6 +357,7 @@ export default function ProfessionalFormModal({
         </DialogContent>
       </Dialog>
       
+      {/* Dialog de revisão */}
       <AlertDialog 
         open={isReviewOpen} 
         onOpenChange={setIsReviewOpen}
