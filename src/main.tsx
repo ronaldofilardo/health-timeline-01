@@ -13,7 +13,7 @@ const updateSW = registerSW({
       title: "Nova versão disponível!",
       description: "Clique em atualizar para obter a versão mais recente.",
       action: {
-        label: "Atualizar",
+        altText: "Atualizar",
         onClick: () => updateSW()
       }
     });

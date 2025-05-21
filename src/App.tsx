@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { HealthProvider } from './context/HealthContext';
 import { AuthProvider } from './context/AuthContext';
 import { Toaster } from '@/components/ui/toaster';
+import ProtectedRoute from './components/auth/ProtectedRoute';
 import Index from './pages/Index';
 import Login from './pages/Login';
 import NotFound from './pages/NotFound';
@@ -20,13 +21,41 @@ function App() {
         <HealthProvider>
           <Routes>
             <Route path="/login" element={<Login />} />
-            <Route path="/" element={<Index />} />
-            <Route path="/calendar" element={<CalendarPage />} />
-            <Route path="/files" element={<FilesPage />} />
-            <Route path="/professionals" element={<ProfessionalsPage />} />
-            <Route path="/event/new" element={<EventPage />} />
-            <Route path="/event/edit/:id" element={<EventPage />} />
-            <Route path="/backup" element={<BackupRestorePage />} />
+            <Route path="/" element={
+              <ProtectedRoute>
+                <Index />
+              </ProtectedRoute>
+            } />
+            <Route path="/calendar" element={
+              <ProtectedRoute>
+                <CalendarPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/files" element={
+              <ProtectedRoute>
+                <FilesPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/professionals" element={
+              <ProtectedRoute>
+                <ProfessionalsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/event/new" element={
+              <ProtectedRoute>
+                <EventPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/event/edit/:id" element={
+              <ProtectedRoute>
+                <EventPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/backup" element={
+              <ProtectedRoute>
+                <BackupRestorePage />
+              </ProtectedRoute>
+            } />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <Toaster />

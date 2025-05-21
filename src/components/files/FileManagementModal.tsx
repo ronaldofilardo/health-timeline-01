@@ -30,6 +30,7 @@ export default function FileManagementModal({ event, isOpen, onClose }: FileMana
     'Nota Fiscal'
   ];
 
+  // Modified to only get files for this specific event
   const getFileByType = (type: FileType) => {
     return event.files.find(file => file.type === type && !file.isDeleted);
   };
@@ -48,11 +49,11 @@ export default function FileManagementModal({ event, isOpen, onClose }: FileMana
       return;
     }
 
-    // In a real application, we would upload the file to a server
-    // For now, we'll just simulate it
-    const fakePath = URL.createObjectURL(file);
+    // Create a unique file path using the event ID and timestamp to avoid duplicates
+    const timestamp = new Date().getTime();
+    const fakePath = URL.createObjectURL(file) + `?eventId=${event.id}&timestamp=${timestamp}`;
     
-    // Add file to event
+    // Add file to this specific event
     addFileToEvent(event.id, type, fakePath);
     
     toast({
@@ -136,14 +137,14 @@ export default function FileManagementModal({ event, isOpen, onClose }: FileMana
                     </div>
                   ) : (
                     <div>
-                      <label htmlFor={`file-${type}`}>
+                      <label htmlFor={`file-${type}-${event.id}`}>
                         <div className="flex items-center justify-center px-4 py-2 border border-dashed rounded-md cursor-pointer hover:bg-gray-50">
                           <Upload className="h-4 w-4 mr-2" />
                           <span className="text-sm">Selecionar Arquivo</span>
                         </div>
                         <input
                           type="file"
-                          id={`file-${type}`}
+                          id={`file-${type}-${event.id}`}
                           className="hidden"
                           accept=".pdf,.jpg,.jpeg,.png"
                           onChange={(e) => handleFileChange(type, e)}

@@ -163,6 +163,7 @@ export default function CalendarPage() {
             selectedDate={selectedDate}
             filteredEvents={filteredEvents}
             onExportPDF={handleExportPDF}
+            filterType={filterType}
             ref={calendarContentRef}
           />
         </div>
