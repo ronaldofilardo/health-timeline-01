@@ -1,10 +1,9 @@
-
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format, parse, startOfWeek, addDays, isEqual } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
-import { AppLayout } from '@/components/layout/AppLayout';
+import { MainLayout } from '@/components/layout/MainLayout';
 import { ArrowLeft } from 'lucide-react';
 import { useHealth } from '@/context/HealthContext';
 import { Event } from '@/types';
@@ -135,7 +134,7 @@ export default function CalendarPage() {
   };
   
   return (
-    <AppLayout title="Calendário">
+    <MainLayout title="Calendário">
       <div className="mb-6">
         <Button 
           variant="ghost" 
@@ -168,6 +167,6 @@ export default function CalendarPage() {
           />
         </div>
       </div>
-    </AppLayout>
+    </MainLayout>
   );
 }
