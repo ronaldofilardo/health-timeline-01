@@ -267,12 +267,15 @@ export function HealthProvider({ children }: { children: ReactNode }) {
     ));
   };
 
-  // Add a file to an event
+  // Add a file to an event - Corrigido para ser único por evento
   const addFileToEvent = (eventId: number, fileType: FileType, path: string) => {
     const updatedEvents = events.map(event => {
       if (event.id === eventId) {
+        // Remove any existing file of the same type for this specific event
+        const existingFiles = event.files.filter(file => file.type !== fileType || file.isDeleted);
+        
         const newFile = {
-          id: event.files.length > 0 ? Math.max(...event.files.map(f => f.id)) + 1 : 1,
+          id: Date.now() + Math.random(), // Use timestamp + random for unique ID
           eventId,
           type: fileType,
           path,
@@ -282,7 +285,7 @@ export function HealthProvider({ children }: { children: ReactNode }) {
         
         return {
           ...event,
-          files: [...event.files, newFile]
+          files: [...existingFiles, newFile]
         };
       }
       return event;

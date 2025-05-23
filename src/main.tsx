@@ -4,6 +4,7 @@ import App from './App.tsx'
 import './index.css'
 import { registerSW } from 'virtual:pwa-register'
 import { toast } from '@/hooks/use-toast'
+import { Button } from '@/components/ui/button'
 
 // Registrar o service worker
 const updateSW = registerSW({
@@ -12,10 +13,7 @@ const updateSW = registerSW({
     toast({
       title: "Nova versão disponível!",
       description: "Clique em atualizar para obter a versão mais recente.",
-      action: {
-        altText: "Atualizar",
-        onClick: () => updateSW()
-      }
+      action: <Button onClick={() => updateSW()}>Atualizar</Button>
     });
   },
   onOfflineReady() {

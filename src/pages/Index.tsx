@@ -1,12 +1,12 @@
 
 import { useEffect } from 'react';
 import Timeline from '@/components/timeline/Timeline';
-import { AppLayout } from '@/components/layout/AppLayout';
+import { MainLayout } from '@/components/layout/MainLayout';
 
 export default function Index() {
   return (
-    <AppLayout title="Timeline">
+    <MainLayout title="Timeline">
       <Timeline />
-    </AppLayout>
+    </MainLayout>
   );
 }
