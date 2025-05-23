@@ -27,7 +27,7 @@ export default function FileRepository() {
     return dateB.getTime() - dateA.getTime(); // Descending order (newest first)
   });
   
-  const handleManageFiles = (eventId: number) => {
+  const handleViewFiles = (eventId: number) => {
     setSelectedEventId(eventId);
     setIsFileManagementOpen(true);
   };
@@ -77,7 +77,7 @@ export default function FileRepository() {
                             hasFile ? 'bg-health-secondary' : 'opacity-50'
                           )}
                           disabled={!hasFile}
-                          onClick={() => handleManageFiles(event.id)}
+                          onClick={() => handleViewFiles(event.id)}
                         >
                           {hasFile ? (
                             <Eye className="h-4 w-4 mr-2" />

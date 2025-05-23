@@ -1,8 +1,7 @@
-
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useHealth } from '@/context/HealthContext';
-import { AppLayout } from '@/components/layout/AppLayout';
+import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Download, Upload, Check, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -133,7 +132,7 @@ export default function BackupRestorePage() {
   }, 0);
   
   return (
-    <AppLayout title="Backup e Restauração">
+    <MainLayout title="Backup e Restauração">
       <div className="mb-6">
         <Button 
           variant="ghost" 
@@ -312,6 +311,6 @@ export default function BackupRestorePage() {
           </TabsContent>
         </Tabs>
       </div>
-    </AppLayout>
+    </MainLayout>
   );
 }

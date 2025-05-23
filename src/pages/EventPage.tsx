@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useHealth } from '@/context/HealthContext';
-import { AppLayout } from '@/components/layout/AppLayout';
+import { MainLayout } from '@/components/layout/MainLayout';
 import { format } from 'date-fns';
 import EventForm from '@/components/events/EventForm';
 import { Event } from '@/types';
@@ -50,7 +50,7 @@ const EventPage = () => {
   }, [isEditMode, eventId, getEventById, navigate]);
 
   return (
-    <AppLayout title={isEditMode ? 'Editar Evento' : 'Novo Evento'}>
+    <MainLayout title={isEditMode ? 'Editar Evento' : 'Novo Evento'}>
       <div className="container mx-auto px-4 py-8">
         <EventForm 
           isEditMode={isEditMode} 
@@ -58,7 +58,7 @@ const EventPage = () => {
           professionalName={professionalName}
         />
       </div>
-    </AppLayout>
+    </MainLayout>
   );
 };
 

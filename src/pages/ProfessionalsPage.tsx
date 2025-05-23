@@ -1,6 +1,6 @@
 
 import { useNavigate } from 'react-router-dom';
-import { AppLayout } from '@/components/layout/AppLayout';
+import { MainLayout } from '@/components/layout/MainLayout';
 import ProfessionalsManagement from '@/components/professionals/ProfessionalsManagement';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
@@ -13,7 +13,7 @@ export default function ProfessionalsPage() {
   const professionalManagement = useMemo(() => <ProfessionalsManagement />, []);
   
   return (
-    <AppLayout title="Gerenciar Profissionais">
+    <MainLayout title="Gerenciar Profissionais">
       <div className="mb-6">
         <Button 
           variant="ghost" 
@@ -26,6 +26,6 @@ export default function ProfessionalsPage() {
       </div>
       
       {professionalManagement}
-    </AppLayout>
+    </MainLayout>
   );
 }

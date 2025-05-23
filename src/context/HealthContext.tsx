@@ -267,16 +267,19 @@ export function HealthProvider({ children }: { children: ReactNode }) {
     ));
   };
 
-  // Add a file to an event - Corrigido para ser único por evento
+  // Add a file to an event - CORRIGIDO para garantir unicidade por evento
   const addFileToEvent = (eventId: number, fileType: FileType, path: string) => {
     const updatedEvents = events.map(event => {
       if (event.id === eventId) {
-        // Remove any existing file of the same type for this specific event
+        // Remove any existing file of the same type for this specific event only
         const existingFiles = event.files.filter(file => file.type !== fileType || file.isDeleted);
         
+        // Generate unique file ID that's guaranteed to be unique
+        const newFileId = Date.now() + Math.random() * 1000;
+        
         const newFile = {
-          id: Date.now() + Math.random(), // Use timestamp + random for unique ID
-          eventId,
+          id: newFileId,
+          eventId: eventId, // Explicitly set the eventId
           type: fileType,
           path,
           uuid: crypto.randomUUID(),
@@ -288,7 +291,7 @@ export function HealthProvider({ children }: { children: ReactNode }) {
           files: [...existingFiles, newFile]
         };
       }
-      return event;
+      return event; // Return unchanged for other events
     });
     
     setEvents(updatedEvents);
@@ -345,7 +348,7 @@ export function HealthProvider({ children }: { children: ReactNode }) {
     return JSON.stringify(dataToExport, null, 2);
   };
 
-  // Import data from JSON
+  // Import data from JSON - CORRIGIDO para manter arquivos únicos por evento
   const importData = (jsonData: string) => {
     try {
       const parsedData = JSON.parse(jsonData);
@@ -359,26 +362,43 @@ export function HealthProvider({ children }: { children: ReactNode }) {
         return { success: false, message: "Formato de dados inválido: 'professionals' não encontrado ou não é um array" };
       }
 
-      // Create mapping for professionals
+      // Get the highest current IDs to avoid conflicts
+      const currentMaxEventId = events.length > 0 ? Math.max(...events.map(e => e.id)) : 0;
+      const currentMaxProfId = professionals.length > 0 ? Math.max(...professionals.map(p => p.id)) : 0;
+      
+      // Create mapping for professionals with new IDs
       const professionalsMap = new Map();
-      parsedData.professionals.forEach((prof: any) => {
-        const newId = professionals.length > 0 ? Math.max(...professionals.map(p => p.id)) + professionalsMap.size + 1 : professionalsMap.size + 1;
+      parsedData.professionals.forEach((prof: any, index: number) => {
+        const newId = currentMaxProfId + index + 1;
         professionalsMap.set(prof.id, newId);
       });
       
       // Import professionals with new IDs
-      const newProfessionals = parsedData.professionals.map((prof: any) => ({
+      const newProfessionals = parsedData.professionals.map((prof: any, index: number) => ({
         ...prof,
-        id: professionalsMap.get(prof.id) || prof.id
+        id: currentMaxProfId + index + 1
       }));
       
-      // Import events with updated professional IDs
-      const newEvents = parsedData.events.map((event: any) => ({
-        ...event,
-        id: events.length > 0 ? Math.max(...events.map(e => e.id)) + 1 : 1,
-        professionalId: professionalsMap.get(event.professionalId) || event.professionalId,
-        status: getEventStatus(event)
-      }));
+      // Import events with updated professional IDs and unique file IDs
+      const newEvents = parsedData.events.map((event: any, eventIndex: number) => {
+        const newEventId = currentMaxEventId + eventIndex + 1;
+        
+        // Generate new unique file IDs for each file in this event
+        const updatedFiles = (event.files || []).map((file: any, fileIndex: number) => ({
+          ...file,
+          id: Date.now() + eventIndex * 1000 + fileIndex, // Unique ID per file
+          eventId: newEventId, // Explicit eventId assignment
+          uuid: crypto.randomUUID() // New UUID for each file
+        }));
+        
+        return {
+          ...event,
+          id: newEventId,
+          professionalId: professionalsMap.get(event.professionalId) || event.professionalId,
+          files: updatedFiles,
+          status: getEventStatus(event)
+        };
+      });
       
       // Import specialties
       let newSpecialties = [...specialties];
